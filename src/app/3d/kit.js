@@ -102,6 +102,272 @@ function addSill(g, w, h, x, y, z, ry, mat) {
 let P = null;
 export function initKit(pal) { P = pal; }
 
+/* ══ 外部资产（Kenney CC0 GLB）工厂 ═════════════════════════════════════════
+   为什么要在 kit.js 里引入外部模型：
+     纯程序化几何能表达"结构"（体量、层数、开窗），但表达不了"物件"
+     （一根电线杆、一个变电箱、一排护栏）—— 这些细节的形状语言太特殊，
+     用 Box/Cylinder 拼出来永远是"方块的堆叠感"。
+     而 29 个地点的"城市味"恰恰来自这些路边件。
+
+   关键约束（三条，来自 assets.js 与 LICENSE.md）：
+     ① 外部资产是**异步**的，而 kit.js 的工厂全是同步的。
+        故这里统一返回「包装 Group」：几何同步可用（程序化兜底），
+        GLB 就绪后再把自己挂进去。这样调用方完全不用改。
+     ② 拿不到 GLB 时必须有兜底，否则白屏 —— 每个工厂都写 fallback 分支。
+     ③ 每个 GLB 必须从它自己 kit 的子目录加载（三套 colormap 不同名同内容），
+        故 kit 名是必填参数。
+
+   用法：const g = K.glbProp('roads','electricity-pole', () => 程序化兜底());
+        K.pumpAssets();   // 由 bridge.js 在启动时调用，把所有已登记项灌进场景
+   ═════════════════════════════════════════════════════════════════════════ */
+
+/** 登记表：GLB 就绪后要回填的包装 Group。因为异步，故两段式。 */
+const _pendingGlb = [];
+let _assetLoader = null;
+
+/** 注入资产加载器（由 bridge.js 在启动时调用一次）。传 null 表示禁用外部资产。 */
+export function setAssetLoader(loader) { _assetLoader = loader; }
+
+/**
+ * 生成一个"占位 + 异步替换"的物件。
+ *
+ * @param {string} kit        kit 名：'commercial'|'industrial'|'roads'
+ * @param {string} name       GLB 名（不含 .glb）
+ * @param {Function} fallback 同步兜底工厂：() => THREE.Object3D（可为 null）
+ * @param {object} opt        { y: 底标高, scale, rotY, footprint }
+ * @returns {THREE.Group} 包装 Group（同步返回，立即可放进场景）
+ */
+export function glbProp(kit, name, fallback, opt = {}) {
+  const wrap = new THREE.Group();
+  wrap.userData.glb = { kit, name, ready: false };
+
+  /* ★ 必须标记 noMerge —— 这是本模块最容易踩的坑：
+     mergeStatics 会把静态 Mesh 烘焙进合批、并从树上**摘掉原对象**。
+     如果不排除，会发生两件事：
+       ① 兜底几何被合并走了，包装 Group 变成空壳，
+          warm 完成后 pumpAssets 即使替换成功，画面也**看不出变化**
+          （兜底已经变成合批网格留在场景里了）；
+       ② 于是"替换"永远只体现在计数器上，是真真正正的假通过。
+     标记 noMerge 的代价是这些物件各占一个 draw call，
+     但它们数量有限（每地点十几个），换来的是"可替换"这个前提成立。 */
+  wrap.userData.noMerge = true;
+
+  /* ① 先上兜底几何 —— 保证"任何时候都有东西可看"。
+        这是本设计的关键：GLB 加载失败/未完成都不会留下空洞。 */
+  if (typeof fallback === 'function') {
+    const fb = fallback();
+    if (fb) { fb.userData.isFallback = true; wrap.add(fb); }
+  }
+
+  if (opt.y) wrap.position.y = opt.y;
+  if (opt.rotY) wrap.rotation.y = opt.rotY;
+  if (opt.scale) wrap.scale.setScalar(opt.scale);
+  if (opt.footprint) wrap.userData.footprint = opt.footprint;
+
+  /* ② 登记待回填。若资产已就绪，pumpAssets 会立刻（同一帧内）替换。
+     ★ owner 显式记下"这次登记属于哪个地点组"。
+       为什么不能只靠祖先链判断（见 dropPendingAssets 的注释）：
+       ctx.place() 把包装 Group 挂进地点组，但**登记发生在 place 之前**，
+       而且在 world 被 dispose 的那一刻，祖先链可能已经被拆开 ——
+       那时按祖先找就找不到，登记项会永远滞留在表里（pending 永不为 0）。
+       显式记 owner 与祖先链双保险，两条路任一命中即清。 */
+  _pendingGlb.push({ wrap, kit, name, opt, owner: _currentOwner });
+  return wrap;
+}
+
+/* ★ 当前正在构建的地点组。
+   由 buildLocation 在开始/结束时设置（见 world.js 的 withAssetScope）。
+   这里是模块级可变状态 —— 因为 glbProp 是同步工厂，没有更好的传参路径
+   （要传就得改 29 个地点的几十处调用点，改动面远大于收益）。 */
+let _currentOwner = null;
+
+/** 设定"当前构建的地点组"，返回一个恢复函数（配合 try/finally 用）。 */
+export function setAssetOwner(group) {
+  const prev = _currentOwner;
+  _currentOwner = group || null;
+  return () => { _currentOwner = prev; };
+}
+
+/**
+ * 把所有登记项尝试替换为真实 GLB。
+ * 由 bridge.js 在资产预热完成后调用；可重复调用（幂等）。
+ * @returns {number} 本次成功替换的个数（供验证脚本读数）
+ */
+export function pumpAssets() {
+  if (!_assetLoader) return 0;
+  let done = 0;
+  for (let i = _pendingGlb.length - 1; i >= 0; i--) {
+    const it = _pendingGlb[i];
+    const inst = _assetLoader.instance(it.kit, it.name, it.opt);
+    if (!inst) continue; // 尚未就绪或已失败 → 保留兜底，等下次
+    /* 先清空兜底再挂真模型：两者不能同时在树里，否则会看到"重影"
+       （程序化方块与 GLB 叠在一起）。 */
+    for (let k = it.wrap.children.length - 1; k >= 0; k--) {
+      const c = it.wrap.children[k];
+      if (c.userData.isFallback) it.wrap.remove(c);
+    }
+    it.wrap.add(inst);
+    it.wrap.userData.glb.ready = true;
+    _pendingGlb.splice(i, 1);
+    done++;
+  }
+  return done;
+}
+
+/** 待回填数量（0 表示全部已就绪或已放弃）—— 验证脚本用它做收敛断言。 */
+export function pendingAssetCount() { return _pendingGlb.length; }
+
+/**
+ * 场景被销毁/重建时，丢弃指向已死对象的登记项。
+ *
+ * ★ 为什么必须有这个函数（这是本模块最隐蔽的一个坑）：
+ *   glbProp 登记的是"场景里的包装 Group"。但地点切换会 disposeWorld()，
+ *   把旧 group 从场景摘掉并 dispose 其中所有几何。
+ *   如果登记表还留着那些旧对象，warm 完成后的 pumpAssets 会：
+ *     ① 往一个**已经不在场景里**的 group 上挂 GLB —— 画面毫无变化，
+ *        但计数器显示"替换成功"（典型的假通过）；
+ *     ② 更糟：disposeWorld 遍历旧 group 时会把 GLB 的共享几何也 dispose 掉，
+ *        而缓存里的原型还在用它 —— 之后所有实例都会渲染成空白。
+ *   所以场景回收时必须同步清表。传 group 则只清该 group 下的登记项。
+ * @param {THREE.Object3D|null} group 被销毁的根；null 表示清空全部。
+ * @returns {number} 清掉的登记项数
+ */
+export function dropPendingAssets(group = null) {
+  const before = _pendingGlb.length;
+  if (!group) {
+    _pendingGlb.length = 0;
+    return before;
+  }
+  for (let i = _pendingGlb.length - 1; i >= 0; i--) {
+    const it = _pendingGlb[i];
+    /* 两条判据，任一命中即视为属于该被销毁的地点：
+       ① owner 显式匹配 —— 最可靠，不依赖树结构此刻是否完整；
+       ② 祖先链里出现 group —— 兜底（比如 owner 未设置时的旧路径）。 */
+    let hit = it.owner === group;
+    if (!hit) {
+      let p = it.wrap;
+      while (p) { if (p === group) { hit = true; break; } p = p.parent; }
+    }
+    if (hit) _pendingGlb.splice(i, 1);
+  }
+  return before - _pendingGlb.length;
+}
+
+/* ── 具体的外部资产工厂 ────────────────────────────────────────────────
+   只挑"形状语言最特殊、程序化最难仿"的路边件。
+   刻意**不**替换建筑主体：现有 lowRise/slabBlock/tower 已经带完整
+   材质链（法线、粗糙、倒角、贴图重复），换成 GLB 反而丢掉 P0-P3 的成果。
+
+   ★ 模型名全部经 ls 核对存在（见 src/assets/kenney/manifest.json）：
+     roads:      light-square / light-square-double / light-curved /
+                 construction-barrier / construction-cone / dumpster /
+                 electricity-pole / bridge-pillar
+     industrial: detail-tank / detail-tank-large / chimney-medium /
+                 solar-panel-landscape / water-tower / shipping-container-a
+     commercial: detail-awning / detail-parasol-a / detail-overhang */
+
+/** 变电箱 / 储罐（工业 kit）—— 程序化拼不出那个罐体+管口的形。 */
+export function tankProp({ large = false, tier = 2 } = {}) {
+  const name = large ? 'detail-tank-large' : 'detail-tank';
+  return glbProp('industrial', name, () => {
+    const g = new THREE.Group();
+    const r = large ? 1.1 : 0.8, h = large ? 2.2 : 1.6;
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 14), P.common.metal);
+    body.position.y = h / 2; body.castShadow = true; g.add(body);
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.55, r * 0.55, 0.22, 12), P.common.metalLight);
+    cap.position.y = h + 0.11; g.add(cap);
+    g.userData.footprint = { w: r * 2, d: r * 2, h: h + 0.3 };
+    return g;
+  }, { footprint: { w: large ? 2.2 : 1.6, d: large ? 2.2 : 1.6, h: large ? 2.5 : 1.9 } });
+}
+
+/** 烟囱（工业 kit）—— 厂区的天际线标志物。 */
+export function chimneyProp({ kind = 'medium' } = {}) {
+  return glbProp('industrial', `chimney-${kind}`, null, {
+    footprint: { w: 1.2, d: 1.2, h: 8 },
+  });
+}
+
+/** 水塔（工业 kit）—— 老厂区/城中村边上的典型构筑物。 */
+export function waterTowerProp() {
+  return glbProp('industrial', 'water-tower', null, {
+    footprint: { w: 2.4, d: 2.4, h: 9 },
+  });
+}
+
+/** 太阳能板（工业 kit）—— 用于新区/园区，提示"这是个有规划的片区"。 */
+export function solarPanelProp({ landscape = true } = {}) {
+  return glbProp('industrial', landscape ? 'solar-panel-landscape' : 'solar-panel-portrait', null, {
+    footprint: { w: 2.0, d: 1.2, h: 1.6 },
+  });
+}
+
+/** 集装箱（工业 kit）—— 堆场/工地/临时住人的标志。 */
+export function shippingContainerProp({ variant = 'a' } = {}) {
+  return glbProp('industrial', `shipping-container-${variant}`, () => {
+    const g = new THREE.Group();
+    const b = new THREE.Mesh(new THREE.BoxGeometry(6, 2.6, 2.4), P.common.metal || P.common.metalLight);
+    b.position.y = 1.3; b.castShadow = true; g.add(b);
+    g.userData.footprint = { w: 6, d: 2.4, h: 2.6 };
+    return g;
+  }, { footprint: { w: 6, d: 2.4, h: 2.6 } });
+}
+
+/** 市政路灯（roads kit）—— 比程序化圆柱杆更有"市政设施"的形。 */
+export function cityLamp({ kind = null } = {}) {
+  const name = kind || pick(['light-square', 'light-square-double', 'light-curved']);
+  return glbProp('roads', name, null, {
+    footprint: { w: 0.6, d: 0.6, h: 7 },
+  });
+}
+
+/** 施工围挡（roads kit）—— 成本极低但信息量大（"这里在施工"）。 */
+export function siteBarrier() {
+  return glbProp('roads', 'construction-barrier', () => {
+    const g = new THREE.Group();
+    const b = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.9, 0.16), P.common.metalLight);
+    b.position.y = 0.65; b.castShadow = true; g.add(b);
+    g.userData.footprint = { w: 2.0, d: 0.2, h: 1.1 };
+    return g;
+  }, { footprint: { w: 2.0, d: 0.2, h: 1.1 } });
+}
+
+/** 交通锥（roads kit）—— 单模型面数极低，可大量散布。 */
+export function trafficCone() {
+  return glbProp('roads', 'construction-cone', null, {
+    footprint: { w: 0.4, d: 0.4, h: 0.6 },
+  });
+}
+
+/** 大垃圾箱（roads kit 的 dumpster，比程序化圆桶更有街面感）。 */
+export function dumpster() {
+  return glbProp('roads', 'dumpster', null, {
+    footprint: { w: 1.6, d: 0.9, h: 1.2 },
+  });
+}
+
+/** 电线杆（roads kit）—— 城中村巷子的标志物。 */
+export function utilityPole() {
+  return glbProp('roads', 'electricity-pole', null, {
+    footprint: { w: 0.4, d: 0.4, h: 8 },
+  });
+}
+
+/** 遮阳篷（商业 kit）—— 挂在店铺门脸上方，把"小卖部"变成"有生活气的铺子"。 */
+export function awningProp({ wide = false } = {}) {
+  return glbProp('commercial', wide ? 'detail-awning-wide' : 'detail-awning', null, {
+    footprint: { w: wide ? 5 : 3, d: 0.9, h: 0.4 },
+  });
+}
+
+/** 遮阳伞（商业 kit）—— 广场/露天摊位的道具。 */
+export function parasolProp({ variant = 'a' } = {}) {
+  return glbProp('commercial', `detail-parasol-${variant}`, null, {
+    footprint: { w: 1.6, d: 1.6, h: 2.4 },
+  });
+}
+
+
 /* ── 招牌材质缓存：同文只画一次 canvas ─────────────────────────────────── */
 const _signCache = new Map();
 function signMat(text, opt = {}) {

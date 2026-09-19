@@ -411,6 +411,34 @@ function layoutYard(ctx) {
     ctx.place(roll, rx, rz, rnd(0, Math.PI), {});
   }
   ctx.spawnZ = S / 2 - 30;
+
+  /* —— 厂区：工业构件（GLB）——
+     这一组是 Kenney industrial kit 里"只有工业场景才会出现"的形：
+       · 储罐 detail-tank —— 程序化只能拼圆柱，缺罐顶与人孔，一眼假；
+       · 烟囱 chimney-medium —— 厂区天际线的标志物；
+       · 水塔 water-tower —— 老厂区/城中村边上的典型构筑物。
+     ★ 全部用工厂函数（而不是直接 instance），因为它们自带程序化兜底。 */
+  const tankCount = rndInt(1, 2);
+  for (let i = 0; i < tankCount; i++) {
+    const [x, z] = yardSpot(7);
+    ctx.place(K.tankProp({ large: chance(0.4), tier }), x, z, rnd(0, Math.PI * 2), {});
+  }
+  {
+    /* 烟囱与水塔要"远、但显眼"：贴着厂区后沿，压住天际线。
+       放在 y=0 的地面上（它们自带基座），不要抬高。 */
+    const chimX = pick([-1, 1]) * rnd(9, 15);
+    ctx.place(K.chimneyProp({ kind: pick(['medium', 'large']) }), chimX, -S / 2 + rnd(8, 14), 0, {});
+    const wtX = -chimX;
+    ctx.place(K.waterTowerProp(), wtX, -S / 2 + rnd(10, 16), rnd(0, Math.PI * 2), {});
+  }
+  /* 散落的交通锥：厂区/工地的必然产物，面数极低可多放几个。
+     ★ 这里必须用 ctx.spot 而不是 sp —— sp 是 propsFor 内部的局部别名，
+       layoutYard 作用域里没有它（本行第一版写成 sp，直接 ReferenceError）。 */
+  for (let i = 0; i < 4; i++) {
+    const [x, z] = ctx.spot(-8, 8, -S / 2 + 8, S / 2 - 8, 5);
+    ctx.place(K.trafficCone(), x, z, 0, {});
+  }
+
   return rows;
 }
 
@@ -522,6 +550,18 @@ function layoutPlaza(ctx) {
     }
     ctx.place(K.archway({ w: gap + 0.8, h: 5.6, text: spec.shortName || spec.name }), 0, S / 2 - 1.5, 0, {});
   }
+
+  /* —— 广场：遮阳伞（GLB，商业 kit）——
+     广场/公园/夜市边缘的露天休息位。程序化的广场只有硬质铺装与树，
+     加几把伞立刻有"人能坐下来"的暗示 —— 这是生活模拟场景最需要的。
+     ★ 只放在**休闲性**广场：政务/法院/医院这类有 gate 的机构场地放伞
+       不合逻辑（那里没有露天消费场景），故用 !spec.gate 排除。 */
+  const parasolCount = spec.gate ? 0 : rndInt(2, 4);
+  for (let i = 0; i < parasolCount; i++) {
+    const [x, z] = ctx.spot(-10, 10, -S / 2 + 10, S / 2 - 10, 7);
+    ctx.place(K.parasolProp({ variant: chance(0.5) ? 'a' : 'b' }), x, z, rnd(0, Math.PI * 2), {});
+  }
+
   return rows;
 }
 
@@ -558,6 +598,20 @@ function propsFor(ctx, kind, rows) {
     const [x, z] = sp(-half, half, -S / 2, S / 2);
     const b = K.bin({ color: pick([0x8a7a3a, 0x3f6a44, 0x3a4a5a]), large: chance(0.3) });
     ctx.place(b, x, z, rnd(0, Math.PI * 2));
+  }
+
+  /* —— 外部资产（Kenney CC0 GLB）：路边件 ——
+     这一组是全场景共享的"城市味"来源。为什么挑这几件：
+       · 大垃圾箱 dumpster —— 程序化的圆桶只有"容器"语义，缺"街面"语义；
+         Kenney 那只是带盖+轮的有体量箱体，一眼就是"城市后巷"。
+       · 电线杆 —— 城中村/老城区的标志物，程序化拼的是纯圆杆，没有瓷瓶与横担。
+       · 工况件（围挡/锥）—— 只在特定地点出现（见下面分层投放），
+         因为它们携带"这里在施工"的叙事，撒满全城反而失真。
+     ★ 全部走 glbProp：GLB 未就绪时自动显示程序化兜底，绝不空窗。 */
+  const dumpsterCount = Math.max(1, Math.round((spec.footfall || 0.6) * 3));
+  for (let i = 0; i < dumpsterCount; i++) {
+    const [x, z] = sp(-half, half, -S / 2 + 3, S / 2 - 3, 4.5);
+    ctx.place(K.dumpster(), x, z, rnd(-0.3, 0.3) + (chance(0.5) ? 0 : Math.PI / 2), {});
   }
 
   /* —— 通用：路灯 ——
@@ -657,10 +711,33 @@ function propsFor(ctx, kind, rows) {
         }
       }
     }
+
+    /* —— 城中村：电线杆（GLB）——
+       巷子两侧已有程序化电线杆（上面那圈 poles）。这里额外补 Kenney 的
+       electricity-pole 作为**更强的形状信号** —— 那种带瓷瓶与横担的杆，
+       是"这是中国城中村/老城区"最快被认出来的符号之一。
+       只撒少量（3 根），避免与程序化杆抢位置显得杂乱。 */
+    for (let i = 0; i < 3; i++) {
+      const [x, z] = sp(-half * 0.9, half * 0.9, -S / 2 + 6, S / 2 - 6, 6);
+      ctx.place(K.utilityPole(), x, z, rnd(-0.2, 0.2), {});
+    }
+
+    /* —— 城中村：遮阳篷（GLB，商业 kit）——
+       挂在店铺门脸那一侧，把"小卖部招牌"升级成"有生活气的铺子"。
+       ★ 位置由 rows 反推，与 shopUnit 同侧同 z —— 否则篷子会飘在路中央。 */
+    rows.forEach((r, i) => {
+      if (chance(0.55)) return;
+      const wide = chance(0.4);
+      const a = K.awningProp({ wide });
+      const side = Math.sign(r.x) || 1;
+      ctx.place(a, side * (Math.abs(r.x) - r.d / 2 - 0.5), r.z, side > 0 ? -Math.PI / 2 : Math.PI / 2, {});
+    });
+
     return;
   }
 
   if (kind === 'avenue') {
+
     // 沿街商铺：贴在每栋楼的临街一侧
     const names = SHOP_NAMES[spec.id] || SHOP_NAMES.default;
     let idx = 0;
@@ -929,16 +1006,25 @@ export function buildLocation(scene, gamedata, id, opts = {}) {
   const ctx = new Ctx(scene, spec, tier);
   const kind = spec.layout;
 
-  groundFor(ctx, kind);
-
+  /* ★ 告诉 kit："接下来这些 glbProp 登记都属于本体地点组"。
+     为什么需要：外部资产是异步的，登记表要在"世界被销毁"时按组清理。
+     光靠遍历祖先链在 dispose 时序上不可靠（见 kit.js::dropPendingAssets）。
+     用 try/finally 保证异常时也恢复所有者，不会把 owner 泄漏给下一个地点。 */
+  const releaseOwner = K.setAssetOwner(ctx.group);
   let rows = [];
-  if (kind === 'lane') rows = layoutLane(ctx);
-  else if (kind === 'avenue') rows = layoutAvenue(ctx);
-  else if (kind === 'compound') rows = layoutCompound(ctx);
-  else if (kind === 'yard') rows = layoutYard(ctx);
-  else rows = layoutPlaza(ctx);
+  try {
+    groundFor(ctx, kind);
 
-  propsFor(ctx, kind, rows);
+    if (kind === 'lane') rows = layoutLane(ctx);
+    else if (kind === 'avenue') rows = layoutAvenue(ctx);
+    else if (kind === 'compound') rows = layoutCompound(ctx);
+    else if (kind === 'yard') rows = layoutYard(ctx);
+    else rows = layoutPlaza(ctx);
+
+    propsFor(ctx, kind, rows);
+  } finally {
+    releaseOwner();
+  }
 
   // —— 交互点：绑定真实职业数据 ——
   placeHotspots(ctx, loc, kind);

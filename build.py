@@ -200,6 +200,31 @@ def main():
         else:
             shutil.copytree(src_images, dst_images)
 
+    # ── 3D 外部资产（Kenney CC0 GLB）自托管 ────────────────────────────────
+    # 为什么必须复制而不能内联：
+    #   三套 Kenney kit 的 GLB 各自引用同名的 Textures/colormap.png，
+    #   而三份 colormap 内容互不相同（见 src/assets/kenney/LICENSE.md）。
+    #   GLTFLoader 按 GLB 内部记录的相对 URI 解析贴图，所以必须保持
+    #   「每个 GLB 与它自己 kit 的 Textures/ 同目录」这一结构。
+    #   基64内联会破坏这个相对关系，且 8.5MB 资产膨胀 33% 不可接受 —— 故选路线 B。
+    # CSP 侧只需 connect-src 'self'（见 src/_headers），因为都是同源请求。
+    src_assets = os.path.join(SRC_DIR, 'assets')
+    dst_assets = os.path.join(DIST_DIR, 'assets')
+    if os.path.isdir(src_assets):
+        copied = 0
+        import filecmp
+        for root, dirs, files_list in os.walk(src_assets):
+            for fname in files_list:
+                src_file = os.path.join(root, fname)
+                rel = os.path.relpath(src_file, src_assets)
+                dst_file = os.path.join(dst_assets, rel)
+                os.makedirs(os.path.dirname(dst_file), exist_ok=True)
+                if not os.path.exists(dst_file) or not filecmp.cmp(src_file, dst_file, shallow=False):
+                    shutil.copy2(src_file, dst_file)
+                    copied += 1
+        total = sum(len(f) for _, _, f in os.walk(dst_assets))
+        print(f"  📦 3D assets: {total} 个文件（本次新增/更新 {copied}）")
+
     # 复制 favicon 文件到 dist/
     for fname in os.listdir(SRC_DIR):
         if fname.startswith('favicon') or fname.startswith('apple-touch-icon'):

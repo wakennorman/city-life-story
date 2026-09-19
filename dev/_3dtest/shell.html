@@ -79,6 +79,12 @@
 
   let curId = 'slum';
 
+  /* dev 预览页从**项目根**提供服务，而外部资产在 src/assets/kenney/。
+     生产里 app.js 与 assets/ 同级，无需覆盖；dev 下必须显式指向 src 下那棵。
+     不这样做的话，GLB 会 404 并静默降级到程序化几何 —— 画面看着"正常"，
+     但外部资产其实一个都没加载（正是本项目最忌讳的"假通过"）。 */
+  if (S3.setAssetBase) S3.setAssetBase('/src/assets/kenney/');
+
   const shell = S3.create3DShell({
     container: host,
     data: g,

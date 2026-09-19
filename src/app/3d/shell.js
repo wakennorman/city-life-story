@@ -211,7 +211,15 @@ export function create3DShell(opts = {}) {
         postFx: view ? view.stats.postFx : null,
         sun: view ? view.stats.sun : null,
         cameraDepth: view ? { near: view.camera.near, far: view.camera.far } : null,
+        /* 外部资产（Kenney CC0 GLB）运行态。
+           放这里的原因与 postFx 相同：资产链的失败模式（404、CSP 拦、贴图没解析、
+           pump 时机错）**全部是静默的** —— 画面照常渲染，只是退回了程序化几何。
+           不把加载器状态暴露出来，就没有任何手段区分"真用了 GLB"和"静静退回了兜底"。 */
+        assets: view ? view.assets : null,
       };
     },
+
+    /** 外部资产快照的直通口（验证脚本用；避免脚本去翻 view 内部结构） */
+    get assets() { return view ? view.assets : null; },
   };
 }

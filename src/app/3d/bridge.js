@@ -25,6 +25,8 @@ import * as THREE from 'three';
 import { initMaterials } from './materials.js';
 import { buildPalette, palette } from './palette.js';
 import { buildLocation } from './world.js';
+import { setAssetLoader, pumpAssets, pendingAssetCount, dropPendingAssets } from './kit.js';
+import { createAssetLoader } from './assets.js';
 import { mergeStatics, countScene } from './merge.js';
 import { Player, IsoCamera } from './player.js';
 /* 后处理（three/addons → examples/jsm，见 three 的 exports 映射）。
@@ -461,6 +463,29 @@ export function createGame3D(opts) {
   initMaterials();
   buildPalette();
 
+  /* ── 外部资产（Kenney CC0 GLB，路线 B 自托管）─────────────────────────────
+     初始化时序很重要，三层：
+       ① 这里只**建加载器 + 注入 kit**，不发起请求（首屏不能被 8.5MB 资产拖住）。
+       ② 预热放在首帧之后（见下面 raf 循环外的 scheduleWarm），让玩家先看到场景。
+       ③ 每次 buildLocation 之后调 pumpAssets()，把"已就绪"的 GLB
+          替换掉 kit 里的程序化兜底。
+     ★ 资产整条链是**尽力而为**：加载失败时 kit 保留兜底几何，
+       场景照常可用 —— 这保证离线直开 / CSP 意外收紧 / 路径变更都不会白屏。 */
+  const assets = createAssetLoader();
+  setAssetLoader(assets);
+  /* 只预热"路边件"所在的 roads/industrial/commercial 常用子集，
+     而不是 173 个全量 —— 避免首屏后立刻打 173 个请求。 */
+  const WARM_LIST = [
+    ['roads', 'light-square'], ['roads', 'light-square-double'], ['roads', 'light-curved'],
+    ['roads', 'construction-barrier'], ['roads', 'construction-cone'],
+    ['roads', 'dumpster'], ['roads', 'electricity-pole'],
+    ['industrial', 'detail-tank'], ['industrial', 'detail-tank-large'],
+    ['industrial', 'chimney-medium'], ['industrial', 'water-tower'],
+    ['industrial', 'shipping-container-a'],
+    ['commercial', 'detail-awning'], ['commercial', 'detail-awning-wide'],
+    ['commercial', 'detail-parasol-a'],
+  ];
+
   /* ── 角色 / 相机 ────────────────────────────────────────────────────── */
   const player = new Player(scene, [], new THREE.Vector3(0, 0, 10));
   /* ★ 相机深度（P2-4）：near 0.1 → 0.5、far 400 → 250。
@@ -519,6 +544,10 @@ export function createGame3D(opts) {
   let running = false;
   let rafId = 0;
   let last = 0;
+  /** 外部资产只预热一次（多次 start/stop 不重复请求）。 */
+  let assetsWarmed = false;
+  /** 累计成功替换的 GLB 实例数（两处 pump 相加；验证脚本断言 > 0）。 */
+  let assetsReplacedTotal = 0;
 
   const keys = new Set();
 
@@ -653,7 +682,19 @@ export function createGame3D(opts) {
   /* ── 地点加载 ───────────────────────────────────────────────────────── */
   function disposeWorld(w) {
     if (!w) return;
-    w.group.traverse((o) => { if (o.isMesh && o.geometry) o.geometry.dispose(); });
+    /* ★ 先把指向本世界的待回填登记清掉（见 kit.js::dropPendingAssets 的长注释）。
+       必须在 traverse/dispose **之前**：否则那些包装 Group 会被连带 dispose，
+       而登记表仍留着它们，之后 pump 会往死对象上挂模型（假通过），
+       并且可能把缓存原型的共享几何一起 dispose 掉。 */
+    dropPendingAssets(w.group);
+    /* ★ GLB 的几何是**缓存共享**的（见 assets.js::instance 的 clone 说明）：
+       原型一份，所有实例共用同一批 BufferGeometry。
+       所以这里不能无差别 dispose —— 会把缓存原型也毁掉。
+       标记 glbSourced 的网格跳过（它们的生命周期归资产缓存管）。
+       兜底几何是我们自己 new 的，照常释放。 */
+    w.group.traverse((o) => {
+      if (o.isMesh && o.geometry && !o.userData.glbSourced) o.geometry.dispose();
+    });
     scene.remove(w.group);
   }
 
@@ -737,6 +778,13 @@ export function createGame3D(opts) {
 
     world = buildLocation(scene, data, id);
 
+    /* 把已就绪的外部资产回填进本次构建的场景。
+       ★ 必须在 mergeStatics **之前**：GLB 是静态几何，越早挂上去，
+         越能一起被合并进合批，少一批 draw call。
+       ★ 未就绪的会留在 _pendingGlb 里，等 warm 完成后再 pump 一次。 */
+    const assetReplaced = pumpAssets();
+    assetsReplacedTotal += assetReplaced;
+
     /* ★ collectLamps 必须跑在 mergeStatics **之前**。
        mergeStatics 会把静态 Mesh 烘焙合并、并从树上摘掉原对象；
        灯锚点所在的 group 一旦被清空就再也找不到。
@@ -775,6 +823,8 @@ export function createGame3D(opts) {
       meshes: { before: mergeStat.before, after: mergeStat.after },
       hotspots: world.hotspots.length,
       colliders: world.colliders.length,
+      /* 外部资产运行态：给人看（调试面板）也给验证脚本断言用。 */
+      assets: { replaced: assetReplaced, pending: pendingAssetCount(), report: assets.report() },
     };
     opts.onBuild?.(info);
     lastBuild = info;
@@ -879,6 +929,27 @@ export function createGame3D(opts) {
     last = performance.now();
     fpsT0 = last; frames = 0;
     rafId = requestAnimationFrame(loop);
+
+    /* 首帧之后再预热外部资产。
+       ★ 为什么不在构造时预热：构造发生在 3D 被打开的那一刻，
+         8.5MB 资产哪怕异步也会抢带宽、推高首帧时间（用户先看到的应该是场景，不是加载条）。
+         放到这里，"看到场景"与"载入细节"就分成了两件事。
+       ★ warm 完成后调 pumpAssets()，把已就绪的 GLB 换掉场景里的程序化兜底。
+         这是**真正生效的那一次 pump** —— 因为 warm 是异步的，
+         而 loadLocation 里的那次 pump 通常跑在资产回来之前（那时全是未就绪）。
+         （这两次调用都要保留：前者管"切地点时命中缓存"，后者管"首次加载完成后回填"。）
+       ★ 回填后必须重算三角面计数：stats.build.tris 是构建时快照的数字，
+         GLB 换上之后不再准确，验证脚本会读到过期的面数。 */
+    if (!assetsWarmed) {
+      assetsWarmed = true;
+      assets.warm(WARM_LIST).then((n) => {
+        const replaced = pumpAssets();
+        assetsReplacedTotal += replaced;
+        const counts = world ? countScene(world.group) : null;
+        if (counts && lastBuild) lastBuild.tris = counts.tris;
+        opts.onAssets?.({ loaded: n, replaced, report: assets.report() });
+      });
+    }
   }
   function stop() {
     running = false;
@@ -934,6 +1005,17 @@ export function createGame3D(opts) {
     setTimeSlot(slot) { applyTimeSlot(slot); applyNightLights(slot === "夜间", cam.cur); },
     /** 只读当前时段（验证脚本用） */
     get timeSlot() { return currentSlot; },
+    /* ── 外部资产运行态（Kenney CC0）─────────────────────────────────────
+       给验证脚本断言"GLB 真的被加载/替换了"，也给调试面板看失败原因。
+       只读快照，不暴露 cache 内部对象。 */
+    get assets() {
+      return {
+        pending: pendingAssetCount(),
+        replacedTotal: assetsReplacedTotal,
+        report: assets.report(),
+        warmList: WARM_LIST.length,
+      };
+    },
     /* ── 只读状态 ── */
     get locationId() { return currentId; },
     get hotspot() { return focused; },

@@ -1,0 +1,873 @@
+{
+ "commercial": [
+  {
+   "name": "building-a",
+   "tris": 1252,
+   "size": 108936
+  },
+  {
+   "name": "building-b",
+   "tris": 1276,
+   "size": 106408
+  },
+  {
+   "name": "building-c",
+   "tris": 1195,
+   "size": 102788
+  },
+  {
+   "name": "building-d",
+   "tris": 1100,
+   "size": 95160
+  },
+  {
+   "name": "building-e",
+   "tris": 1509,
+   "size": 128208
+  },
+  {
+   "name": "building-f",
+   "tris": 1794,
+   "size": 148952
+  },
+  {
+   "name": "building-g",
+   "tris": 2006,
+   "size": 166356
+  },
+  {
+   "name": "building-h",
+   "tris": 1512,
+   "size": 127384
+  },
+  {
+   "name": "building-i",
+   "tris": 2544,
+   "size": 209728
+  },
+  {
+   "name": "building-j",
+   "tris": 5246,
+   "size": 440652
+  },
+  {
+   "name": "building-k",
+   "tris": 2960,
+   "size": 246976
+  },
+  {
+   "name": "building-l",
+   "tris": 3512,
+   "size": 290516
+  },
+  {
+   "name": "building-m",
+   "tris": 3740,
+   "size": 301004
+  },
+  {
+   "name": "building-n",
+   "tris": 4350,
+   "size": 341232
+  },
+  {
+   "name": "building-skyscraper-a",
+   "tris": 1292,
+   "size": 111336
+  },
+  {
+   "name": "building-skyscraper-b",
+   "tris": 1592,
+   "size": 138480
+  },
+  {
+   "name": "building-skyscraper-c",
+   "tris": 1704,
+   "size": 149524
+  },
+  {
+   "name": "building-skyscraper-d",
+   "tris": 1892,
+   "size": 167148
+  },
+  {
+   "name": "building-skyscraper-e",
+   "tris": 1156,
+   "size": 101880
+  },
+  {
+   "name": "detail-awning-wide",
+   "tris": 40,
+   "size": 5544
+  },
+  {
+   "name": "detail-awning",
+   "tris": 40,
+   "size": 5528
+  },
+  {
+   "name": "detail-overhang-wide",
+   "tris": 64,
+   "size": 6716
+  },
+  {
+   "name": "detail-overhang",
+   "tris": 64,
+   "size": 6704
+  },
+  {
+   "name": "detail-parasol-a",
+   "tris": 96,
+   "size": 10320
+  },
+  {
+   "name": "detail-parasol-b",
+   "tris": 120,
+   "size": 12120
+  },
+  {
+   "name": "low-detail-building-a",
+   "tris": 188,
+   "size": 14340
+  },
+  {
+   "name": "low-detail-building-b",
+   "tris": 200,
+   "size": 16336
+  },
+  {
+   "name": "low-detail-building-c",
+   "tris": 142,
+   "size": 12284
+  },
+  {
+   "name": "low-detail-building-d",
+   "tris": 106,
+   "size": 8716
+  },
+  {
+   "name": "low-detail-building-e",
+   "tris": 96,
+   "size": 8240
+  },
+  {
+   "name": "low-detail-building-f",
+   "tris": 88,
+   "size": 6932
+  },
+  {
+   "name": "low-detail-building-g",
+   "tris": 200,
+   "size": 16320
+  },
+  {
+   "name": "low-detail-building-h",
+   "tris": 378,
+   "size": 26812
+  },
+  {
+   "name": "low-detail-building-i",
+   "tris": 152,
+   "size": 11768
+  },
+  {
+   "name": "low-detail-building-j",
+   "tris": 188,
+   "size": 16404
+  },
+  {
+   "name": "low-detail-building-k",
+   "tris": 86,
+   "size": 7556
+  },
+  {
+   "name": "low-detail-building-l",
+   "tris": 150,
+   "size": 12128
+  },
+  {
+   "name": "low-detail-building-m",
+   "tris": 188,
+   "size": 15112
+  },
+  {
+   "name": "low-detail-building-n",
+   "tris": 62,
+   "size": 5904
+  },
+  {
+   "name": "low-detail-building-wide-a",
+   "tris": 156,
+   "size": 12736
+  },
+  {
+   "name": "low-detail-building-wide-b",
+   "tris": 246,
+   "size": 18736
+  }
+ ],
+ "industrial": [
+  {
+   "name": "building-a",
+   "tris": 2046,
+   "size": 177316
+  },
+  {
+   "name": "building-b",
+   "tris": 2422,
+   "size": 212040
+  },
+  {
+   "name": "building-c",
+   "tris": 1928,
+   "size": 175844
+  },
+  {
+   "name": "building-d",
+   "tris": 1158,
+   "size": 100768
+  },
+  {
+   "name": "building-e",
+   "tris": 1484,
+   "size": 129400
+  },
+  {
+   "name": "building-f",
+   "tris": 1552,
+   "size": 134916
+  },
+  {
+   "name": "building-g",
+   "tris": 1242,
+   "size": 106940
+  },
+  {
+   "name": "building-h",
+   "tris": 698,
+   "size": 63644
+  },
+  {
+   "name": "building-i",
+   "tris": 798,
+   "size": 73848
+  },
+  {
+   "name": "building-j",
+   "tris": 886,
+   "size": 80792
+  },
+  {
+   "name": "building-k",
+   "tris": 702,
+   "size": 65472
+  },
+  {
+   "name": "building-l",
+   "tris": 1896,
+   "size": 162424
+  },
+  {
+   "name": "building-m",
+   "tris": 1694,
+   "size": 138920
+  },
+  {
+   "name": "building-n",
+   "tris": 1262,
+   "size": 109256
+  },
+  {
+   "name": "building-o",
+   "tris": 868,
+   "size": 76552
+  },
+  {
+   "name": "building-p",
+   "tris": 1162,
+   "size": 103760
+  },
+  {
+   "name": "building-q",
+   "tris": 2062,
+   "size": 181248
+  },
+  {
+   "name": "building-r",
+   "tris": 1912,
+   "size": 173056
+  },
+  {
+   "name": "building-s",
+   "tris": 876,
+   "size": 81192
+  },
+  {
+   "name": "building-t",
+   "tris": 1586,
+   "size": 139896
+  },
+  {
+   "name": "chimney-basic",
+   "tris": 88,
+   "size": 9036
+  },
+  {
+   "name": "chimney-large",
+   "tris": 218,
+   "size": 20932
+  },
+  {
+   "name": "chimney-medium",
+   "tris": 160,
+   "size": 15020
+  },
+  {
+   "name": "chimney-small",
+   "tris": 124,
+   "size": 10536
+  },
+  {
+   "name": "detail-tank-large",
+   "tris": 566,
+   "size": 47452
+  },
+  {
+   "name": "detail-tank",
+   "tris": 310,
+   "size": 31436
+  },
+  {
+   "name": "shipping-container-a",
+   "tris": 402,
+   "size": 36624
+  },
+  {
+   "name": "shipping-container-b",
+   "tris": 402,
+   "size": 37052
+  },
+  {
+   "name": "shipping-container-c",
+   "tris": 402,
+   "size": 36620
+  },
+  {
+   "name": "solar-panel-flat",
+   "tris": 164,
+   "size": 13964
+  },
+  {
+   "name": "solar-panel-landscape-group",
+   "tris": 976,
+   "size": 81860
+  },
+  {
+   "name": "solar-panel-landscape",
+   "tris": 244,
+   "size": 21776
+  },
+  {
+   "name": "solar-panel-portrait-group",
+   "tris": 976,
+   "size": 81856
+  },
+  {
+   "name": "solar-panel-portrait",
+   "tris": 244,
+   "size": 21772
+  },
+  {
+   "name": "water-tower",
+   "tris": 968,
+   "size": 93836
+  },
+  {
+   "name": "windmill-low",
+   "tris": 456,
+   "size": 46296
+  },
+  {
+   "name": "windmill",
+   "tris": 456,
+   "size": 46292
+  }
+ ],
+ "roads": [
+  {
+   "name": "bridge-pillar-wide",
+   "tris": 38,
+   "size": 5488
+  },
+  {
+   "name": "bridge-pillar",
+   "tris": 38,
+   "size": 5468
+  },
+  {
+   "name": "construction-barrier",
+   "tris": 60,
+   "size": 7052
+  },
+  {
+   "name": "construction-cone",
+   "tris": 66,
+   "size": 7056
+  },
+  {
+   "name": "construction-fence",
+   "tris": 136,
+   "size": 14856
+  },
+  {
+   "name": "construction-light",
+   "tris": 144,
+   "size": 15320
+  },
+  {
+   "name": "dumpster",
+   "tris": 234,
+   "size": 24456
+  },
+  {
+   "name": "electricity-pole-single",
+   "tris": 176,
+   "size": 19480
+  },
+  {
+   "name": "electricity-pole-wide",
+   "tris": 544,
+   "size": 56732
+  },
+  {
+   "name": "electricity-pole",
+   "tris": 416,
+   "size": 43652
+  },
+  {
+   "name": "electricity-side-single",
+   "tris": 176,
+   "size": 19464
+  },
+  {
+   "name": "electricity-side-wide",
+   "tris": 544,
+   "size": 56732
+  },
+  {
+   "name": "electricity-side",
+   "tris": 416,
+   "size": 43652
+  },
+  {
+   "name": "electricity-wires-wide",
+   "tris": 200,
+   "size": 22240
+  },
+  {
+   "name": "electricity-wires",
+   "tris": 72,
+   "size": 8952
+  },
+  {
+   "name": "light-curved-cross",
+   "tris": 270,
+   "size": 24912
+  },
+  {
+   "name": "light-curved-double",
+   "tris": 152,
+   "size": 14208
+  },
+  {
+   "name": "light-curved",
+   "tris": 92,
+   "size": 9492
+  },
+  {
+   "name": "light-square-cross",
+   "tris": 134,
+   "size": 13512
+  },
+  {
+   "name": "light-square-double",
+   "tris": 88,
+   "size": 9216
+  },
+  {
+   "name": "light-square",
+   "tris": 60,
+   "size": 6996
+  },
+  {
+   "name": "road-bend-barrier",
+   "tris": 128,
+   "size": 11912
+  },
+  {
+   "name": "road-bend-sidewalk",
+   "tris": 220,
+   "size": 17024
+  },
+  {
+   "name": "road-bend-square-barrier",
+   "tris": 48,
+   "size": 5880
+  },
+  {
+   "name": "road-bend-square",
+   "tris": 60,
+   "size": 6268
+  },
+  {
+   "name": "road-bend",
+   "tris": 260,
+   "size": 20164
+  },
+  {
+   "name": "road-bridge",
+   "tris": 240,
+   "size": 24796
+  },
+  {
+   "name": "road-crossing",
+   "tris": 104,
+   "size": 8700
+  },
+  {
+   "name": "road-crossroad-barrier",
+   "tris": 112,
+   "size": 11256
+  },
+  {
+   "name": "road-crossroad-line",
+   "tris": 108,
+   "size": 9692
+  },
+  {
+   "name": "road-crossroad-path",
+   "tris": 276,
+   "size": 18708
+  },
+  {
+   "name": "road-crossroad",
+   "tris": 116,
+   "size": 10084
+  },
+  {
+   "name": "road-curve-barrier",
+   "tris": 200,
+   "size": 17920
+  },
+  {
+   "name": "road-curve-intersection-barrier",
+   "tris": 166,
+   "size": 15480
+  },
+  {
+   "name": "road-curve-intersection",
+   "tris": 298,
+   "size": 22788
+  },
+  {
+   "name": "road-curve-pavement",
+   "tris": 220,
+   "size": 17044
+  },
+  {
+   "name": "road-curve",
+   "tris": 308,
+   "size": 23912
+  },
+  {
+   "name": "road-driveway-double-barrier",
+   "tris": 72,
+   "size": 8460
+  },
+  {
+   "name": "road-driveway-double",
+   "tris": 72,
+   "size": 7664
+  },
+  {
+   "name": "road-driveway-single-barrier",
+   "tris": 48,
+   "size": 6272
+  },
+  {
+   "name": "road-driveway-single",
+   "tris": 60,
+   "size": 6568
+  },
+  {
+   "name": "road-end-barrier",
+   "tris": 28,
+   "size": 4028
+  },
+  {
+   "name": "road-end-round-barrier",
+   "tris": 160,
+   "size": 16328
+  },
+  {
+   "name": "road-end-round",
+   "tris": 218,
+   "size": 17532
+  },
+  {
+   "name": "road-end",
+   "tris": 42,
+   "size": 4940
+  },
+  {
+   "name": "road-intersection-barrier",
+   "tris": 68,
+   "size": 7676
+  },
+  {
+   "name": "road-intersection-line",
+   "tris": 76,
+   "size": 7492
+  },
+  {
+   "name": "road-intersection-path",
+   "tris": 204,
+   "size": 13736
+  },
+  {
+   "name": "road-intersection",
+   "tris": 84,
+   "size": 7900
+  },
+  {
+   "name": "road-roundabout-barrier",
+   "tris": 754,
+   "size": 61636
+  },
+  {
+   "name": "road-roundabout",
+   "tris": 1636,
+   "size": 105876
+  },
+  {
+   "name": "road-side-barrier",
+   "tris": 24,
+   "size": 4200
+  },
+  {
+   "name": "road-side-entry-barrier",
+   "tris": 232,
+   "size": 20276
+  },
+  {
+   "name": "road-side-entry",
+   "tris": 306,
+   "size": 24288
+  },
+  {
+   "name": "road-side-exit-barrier",
+   "tris": 232,
+   "size": 20272
+  },
+  {
+   "name": "road-side-exit",
+   "tris": 306,
+   "size": 24280
+  },
+  {
+   "name": "road-side",
+   "tris": 44,
+   "size": 5272
+  },
+  {
+   "name": "road-sign-empty-hanging",
+   "tris": 112,
+   "size": 12072
+  },
+  {
+   "name": "road-sign-empty",
+   "tris": 42,
+   "size": 5968
+  },
+  {
+   "name": "road-sign-object-stop",
+   "tris": 62,
+   "size": 6600
+  },
+  {
+   "name": "road-sign-object-street",
+   "tris": 56,
+   "size": 6648
+  },
+  {
+   "name": "road-sign-object-warning",
+   "tris": 62,
+   "size": 7384
+  },
+  {
+   "name": "road-sign-stop",
+   "tris": 104,
+   "size": 10720
+  },
+  {
+   "name": "road-sign-street",
+   "tris": 154,
+   "size": 15948
+  },
+  {
+   "name": "road-sign-warning",
+   "tris": 104,
+   "size": 11496
+  },
+  {
+   "name": "road-slant-barrier",
+   "tris": 24,
+   "size": 4052
+  },
+  {
+   "name": "road-slant-curve-barrier",
+   "tris": 420,
+   "size": 38824
+  },
+  {
+   "name": "road-slant-curve",
+   "tris": 544,
+   "size": 47880
+  },
+  {
+   "name": "road-slant-flat-curve",
+   "tris": 648,
+   "size": 55868
+  },
+  {
+   "name": "road-slant-flat-high",
+   "tris": 44,
+   "size": 5300
+  },
+  {
+   "name": "road-slant-flat",
+   "tris": 44,
+   "size": 5284
+  },
+  {
+   "name": "road-slant-high-barrier",
+   "tris": 24,
+   "size": 4068
+  },
+  {
+   "name": "road-slant-high",
+   "tris": 44,
+   "size": 5256
+  },
+  {
+   "name": "road-slant",
+   "tris": 44,
+   "size": 5240
+  },
+  {
+   "name": "road-split-barrier",
+   "tris": 512,
+   "size": 41340
+  },
+  {
+   "name": "road-split",
+   "tris": 862,
+   "size": 60128
+  },
+  {
+   "name": "road-square-barrier",
+   "tris": 32,
+   "size": 4048
+  },
+  {
+   "name": "road-square",
+   "tris": 36,
+   "size": 4436
+  },
+  {
+   "name": "road-straight-barrier-end",
+   "tris": 16,
+   "size": 3640
+  },
+  {
+   "name": "road-straight-barrier-half",
+   "tris": 24,
+   "size": 4092
+  },
+  {
+   "name": "road-straight-barrier",
+   "tris": 24,
+   "size": 4196
+  },
+  {
+   "name": "road-straight-half",
+   "tris": 44,
+   "size": 5264
+  },
+  {
+   "name": "road-straight",
+   "tris": 44,
+   "size": 5248
+  },
+  {
+   "name": "sign-highway-detailed",
+   "tris": 256,
+   "size": 23532
+  },
+  {
+   "name": "sign-highway-wide",
+   "tris": 144,
+   "size": 13968
+  },
+  {
+   "name": "sign-highway",
+   "tris": 180,
+   "size": 17288
+  },
+  {
+   "name": "tile-high",
+   "tris": 12,
+   "size": 2788
+  },
+  {
+   "name": "tile-low",
+   "tris": 12,
+   "size": 2800
+  },
+  {
+   "name": "tile-slant",
+   "tris": 12,
+   "size": 2820
+  },
+  {
+   "name": "tile-slantHigh",
+   "tris": 12,
+   "size": 2832
+  },
+  {
+   "name": "traffic-light-hanging",
+   "tris": 230,
+   "size": 22132
+  },
+  {
+   "name": "traffic-light-object-hanging",
+   "tris": 114,
+   "size": 10876
+  },
+  {
+   "name": "traffic-light-object-horizontal",
+   "tris": 118,
+   "size": 11664
+  },
+  {
+   "name": "traffic-light-object-vertical",
+   "tris": 132,
+   "size": 12408
+  },
+  {
+   "name": "traffic-light",
+   "tris": 212,
+   "size": 20344
+  }
+ ]
+}

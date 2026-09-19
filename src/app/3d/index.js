@@ -17,3 +17,13 @@ import gamedata from './gamedata.json';
 export { createGame3D, create3DShell, createHUD, gamedata };
 export { buildLocation, SPECS, LAYOUT_KIND } from './world.js';
 export { palette } from './palette.js';
+
+export * from './assets.js';
+/* 外部资产工厂（kit.js 的 GLB 部分）。暴露出来是为了让验证脚本能直接
+   构造单个 glbProp 断言"兜底 → 替换"这条链路，而不必去翻整个场景树。 */
+export {
+  glbProp, pumpAssets, pendingAssetCount, setAssetLoader,
+  cityLamp, utilityPole, siteBarrier, trafficCone, dumpster,
+  tankProp, chimneyProp, waterTowerProp, solarPanelProp, shippingContainerProp,
+  awningProp, parasolProp,
+} from './kit.js';

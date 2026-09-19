@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>城市浮生记 · 外部资产探针</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #59615a;
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif; }
+  #host { position: fixed; inset: 0; }
+</style>
+<link rel="stylesheet" href="/src/css/scene3d.css" />
+</head>
+<body>
+<div id="host"></div>
+<script src="./bundle-probe.js"></script>
+<script>
+/* 外部资产探针
+   ────────────────────────────────────────────────────────────────────
+   目的：把"GLB 是否真的进了场景"变成**可断言的数据**，而不是靠肉眼看画面。
+   本项目最忌讳的是"假通过"—— GLB 404 之后静默退回程序化几何，
+   画面看着完全正常，但外部资产一个都没用上。
+   所以这里逐层取证：请求 → 加载器状态 → 替换结果 → 贴图解析 → 降级行为。 */
+(function () {
+  const S3 = window.Scene3D;
+  const host = document.getElementById('host');
+  const g = S3.gamedata;
+
+  // dev 预览页从项目根提供服务，资产在 src/assets/kenney/
+  S3.setAssetBase('/src/assets/kenney/');
+
+  /* —— 网络取证：自己包一层 fetch/XHR 太脆，直接读 performance 资源条目 ——
+     浏览器会把所有成功与失败的资源请求记进 performance.getEntriesByType('resource')。
+     这是**观测**而不是**拦截**，不会改变被测行为。 */
+  const requests = [];
+  const failed = [];
+
+  const shell = S3.create3DShell({
+    container: host,
+    data: g,
+    readHUD() {
+      const id = shell.locationId || 'slum';
+      const loc = g.locations[id] || {};
+      return {
+        /* ★ 必须回传 locId（权威地点）。外壳的 travel() 逻辑是：
+             有 locId → 场景由 refresh 走"权威态"，不重复重建；
+             没有 locId → 外壳自己 loadLocation(id)，会**重建一次**世界。
+           重建会把上一份世界连同已替换的 GLB 一起回收，
+           造成"替换计数有、场景里却找不到"的错觉。
+           这是外壳的既有约定（见 shell.js::travel 注释），探针必须遵守。 */
+        locId: id,
+        day: 1, slot: '上午', weather: '晴', cash: 300, debt: 0,
+        locIcon: loc.icon, locName: loc.name,
+        needs: { mindset: 33, hunger: 25, hygiene: 30, clothing: 45, foodSatisfaction: 30, happiness: 20, health: 70 },
+        status: '正常', ap: { cur: 100, max: 100 },
+      };
+    },
+    readActions: () => [],
+    readLocations: () => [{ id: 'slum', name: '城中村', icon: '🏚' }],
+    onAction: () => ({ ok: true }),
+  });
+
+  const ready = (async () => {
+    // 必须 start() 才会跑渲染循环 —— 预热就是在 start 里发起的
+    try { shell.start(); } catch (e) { window.__shellErr = String(e); }
+    try { shell.travel('slum'); } catch (e) {}
+  })();
+
+  window.__assetProbe = {
+    ready: false,
+    get base() { return S3.assetBase ? S3.assetBase() : '(no api)'; },
+    /** 抓取一次完整快照。验证脚本调这个。 */
+    snapshot() {
+      /* shell.assets 是 shell.js 新开的直通口，指向 game.assets。
+         若为空说明 3D 核心还没起来 —— 此时必须报 -1 而不是 0，
+         因为 0 会被验证脚本读成"没有待替换"，是一种假绿。 */
+      const rep = shell.assets ? shell.assets.report : { ready: 0, failed: 0, requested: 0, failures: [] };
+      const pending = shell.assets ? shell.assets.pending : -1;
+
+      // 统计场景里的真实 GLB 网格与兜底几何
+      let glbMeshes = 0, leftoverFallback = 0, texturedMaterials = 0;
+      let sceneFound = false, childGroups = 0, wrapperFlagged = 0;
+      let glbScale = 0, glbMaxDim = 0;
+      const textureNames = [];
+      const root = (shell.view3d && shell.view3d.scene) || null;
+      if (root) {
+        sceneFound = true;
+        childGroups = root.children.length;
+        root.traverse((o) => {
+          if (o.userData && o.userData.isFallback) leftoverFallback++;
+          if (o.isMesh) {
+            const m = o.material;
+            if (m && m.map) {
+              texturedMaterials++;
+              const img = m.map.image;
+              const src = (img && (img.currentSrc || img.src)) || '';
+              if (src) textureNames.push(String(src).split('/').slice(-2).join('/'));
+            }
+          }
+          /* 包装 Group 上的就绪标记 = 这个位置真的换上了 GLB。
+             ★ 两个计数分开记，因为它们的失败含义不同：
+               wrapperFlagged = pump 登记成功（逻辑层）
+               glbMeshes     = 真网格在树里（渲染层） */
+          if (o.userData && o.userData.glb) {
+            if (o.userData.glb.ready) wrapperFlagged++;
+            if (o.userData.glb.ready && o.children.length > 0) {
+              glbMeshes++;
+              /* ★ 尺寸取证：缩放施加在**包装 Group 的子对象**上（不是包装本身），
+                 所以必须读子对象的 scale，读包装会永远得到 1。 */
+              if (glbScale === 0) {
+                const inner = o.children.find((c) => !c.userData.isFallback) || o.children[0];
+                glbScale = Math.round(inner.scale.x * 100) / 100;
+              }
+              // 用包围盒量真实世界尺寸（手算顶点范围，避免依赖 Box3 导入）
+              let mn = [1e9, 1e9, 1e9], mx = [-1e9, -1e9, -1e9];
+              o.traverse((c) => {
+                if (!c.isMesh || !c.geometry || !c.geometry.attributes.position) return;
+                const pos = c.geometry.attributes.position;
+                const scale = c.getWorldScale(new (c.position.constructor)());
+                const wp = c.getWorldPosition(new (c.position.constructor)());
+                for (let i = 0; i < pos.count; i += 7) {
+                  const vx = pos.getX(i) * scale.x + wp.x;
+                  const vy = pos.getY(i) * scale.y + wp.y;
+                  const vz = pos.getZ(i) * scale.z + wp.z;
+                  mn[0] = Math.min(mn[0], vx); mx[0] = Math.max(mx[0], vx);
+                  mn[1] = Math.min(mn[1], vy); mx[1] = Math.max(mx[1], vy);
+                  mn[2] = Math.min(mn[2], vz); mx[2] = Math.max(mx[2], vz);
+                }
+              });
+              const dims = [mx[0] - mn[0], mx[1] - mn[1], mx[2] - mn[2]];
+              const d = Math.max(...dims);
+              if (d < 1e8 && d > glbMaxDim) glbMaxDim = Math.round(d * 10) / 10;
+            }
+          }
+        });
+      }
+
+      // 资源计时条目 = 真实发生过的请求
+      const res = performance.getEntriesByType('resource')
+        .filter((r) => /\.glb(\?|$)/.test(r.name));
+      res.forEach((r) => requests.push(r.name));
+      // transferSize === 0 且 duration > 0 通常表示失败/取消
+      res.forEach((r) => { if (r.transferSize === 0) failed.push(r.name); });
+
+      return {
+        base: S3.assetBase ? S3.assetBase() : '',
+        report: rep,
+        pending,
+        pumped: (shell.assets && shell.assets.replacedTotal) || 0,
+        glbMeshes,
+        glbScale,
+        glbMaxDim,
+        sceneFound,
+        childGroups,
+        wrapperFlagged,
+        childNames: (root ? root.children.map((c) => (c.name || c.type) + '#' + c.children.length) : []),
+        /* 直接取 slum 组（如果存在）看它下面有没有 glb 包装 ——
+           用来区分"遍历逻辑写错了"与"包装真的不在树里"。 */
+        slumProbe: (() => {
+          const g2 = root && root.children.find((c) => c.name === 'slum');
+          if (!g2) return null;
+          let withGlbMark = 0, readyMark = 0, meshCount = 0, sampleKeys = [];
+          g2.traverse((o) => {
+            if (o.userData && o.userData.glb) {
+              withGlbMark++;
+              if (o.userData.glb.ready) readyMark++;
+              if (sampleKeys.length < 3) sampleKeys.push(o.userData.glb.kit + '/' + o.userData.glb.name + ':' + o.userData.glb.ready + ':kids' + o.children.length);
+            }
+            if (o.isMesh) meshCount++;
+          });
+          return { withGlbMark, readyMark, meshCount, sampleKeys };
+        })(),
+        leftoverFallback,
+        texturedMaterials,
+        textureNames: Array.from(new Set(textureNames)).slice(0, 6),
+        textureLoaded: rep.ready,
+        requests,
+        failed: failed.length,
+        degradeOk: window.__degradeOk === true,
+        degradeDetail: window.__degradeDetail || '(未测)',
+      };
+    },
+  };
+
+  /* ── 降级自证：拿一个不存在的模型名去 load，断言它 resolve(null) 而不是 reject ──
+     这一步很重要：如果加载器会抛异常，那"降级"就是假的 ——
+     真实环境里一个模型缺失就会让整个 3D 挂掉。 */
+  (async () => {
+    try {
+      const loader = S3.createAssetLoader();
+      loader.setBase && loader.setBase('/src/assets/kenney/');
+      const r = await loader.load('roads', '__definitely_missing_model__');
+      window.__degradeOk = (r === null);
+      window.__degradeDetail = r === null ? '返回 null（符合预期）' : '返回了 ' + typeof r;
+    } catch (e) {
+      window.__degradeOk = false;
+      window.__degradeDetail = '抛异常了：' + e.message;
+    }
+  })();
+
+  /* ── 触发一次真实的地点构建 + 资产预热，并记录 pumpAssets 的替换数 ──
+     ★ 因为 warm 是异步的，这里必须等"待替换数归零"或超时，
+       否则快照会拍在"资产还没回来"的瞬间，断言全部误报失败。 */
+  (async () => {
+    await ready;
+    const t0 = Date.now();
+    // 等预热完成：pending 归零，或最多等 25s
+    while (Date.now() - t0 < 25000) {
+      const a = shell.assets;
+      if (a && a.report.ready > 0 && a.pending === 0) break;
+      await new Promise((r) => setTimeout(r, 250));
+    }
+    /* ★ 预热完成后强制再切一次地点。
+       为什么必须补这一刀：warm 是异步的，而首次 loadLocation 通常跑在
+       资产回来**之前**（那时 pump 找不到任何就绪项）。warm 完成后 bridge
+       会回填一次当前世界 —— 但如果这中间世界被重建过，回填就落在旧世界上。
+       这里再 travel 一次（换个地点再回来），让新世界在"资产已缓存"的
+       状态下重建，pump 必然命中缓存 —— 这才是玩家真实遇到的时序。 */
+    try {
+      const other = Object.keys(g.locations).find((k) => k !== (shell.locationId || 'slum'));
+      if (other) { shell.loadLocation(other); }
+      shell.loadLocation('slum');
+    } catch (e) { window.__revisitErr = String(e); }
+    await new Promise((r) => setTimeout(r, 600));
+    const st = shell.stats;
+    window.__pumpCount = (shell.assets && shell.assets.replacedTotal) || 0;
+    window.__assetProbe.ready = true;
+  })();
+})();
+</script>
+</body>
+</html>

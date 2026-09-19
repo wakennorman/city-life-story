@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>外部资产取证台</title>
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#59615a} #host{position:fixed;inset:0}</style>
+<link rel="stylesheet" href="/src/css/scene3d.css" />
+</head>
+<body>
+<div id="host"></div>
+<script src="./bundle-probe.js"></script>
+<script>
+/* 取证台：把所有已替换成 GLB 的物件逐个拉近拍。
+   与 verify-3d-assets 的分工 —— 那个做数值断言，这个做人工复核。 */
+(function () {
+  const S3 = window.Scene3D;
+  const host = document.getElementById('host');
+  const g = S3.gamedata;
+  S3.setAssetBase('/src/assets/kenney/');
+
+  const shell = S3.create3DShell({
+    container: host,
+    data: g,
+    readHUD() {
+      const id = shell.locationId || 'slum';
+      const loc = g.locations[id] || {};
+      return { locId: id, day: 1, slot: '上午', weather: '晴', cash: 300, debt: 0,
+        locIcon: loc.icon, locName: loc.name,
+        needs: { mindset: 33, hunger: 25, hygiene: 30, clothing: 45, foodSatisfaction: 30, happiness: 20, health: 70 },
+        status: '正常', ap: { cur: 100, max: 100 } };
+    },
+    readActions: () => [],
+    readLocations: () => [{ id: 'slum', name: '城中村', icon: '🏚' }],
+    onAction: () => ({ ok: true }),
+  });
+
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  /* 收集场景里所有 glb 包装及其实例中心点 */
+  function collect() {
+    const root = shell.view3d && shell.view3d.scene;
+    const out = [];
+    if (!root) return out;
+    root.traverse((o) => {
+      if (o.userData && o.userData.glb && o.userData.glb.ready && o.children.length) {
+        const box = new (window.__THREE_BOX__ || Object)();
+        out.push({
+          id: o.userData.glb.kit + '__' + o.userData.glb.name + '__' + out.length,
+          label: o.userData.glb.name,
+          kit: o.userData.glb.kit,
+          name: o.userData.glb.name,
+          obj: o,
+        });
+      }
+    });
+    return out;
+  }
+
+  let items = [];
+
+  window.__shot = {
+    ready: false,
+    list: () => items.map((i) => ({ id: i.id, label: i.label, kit: i.kit, name: i.name })),
+    /* 把相机推到某个物件的近处 */
+    focus(id) {
+      const it = items.find((x) => x.id === id);
+      if (!it) return false;
+      const cam = shell.view3d && shell.view3d.camera;
+      if (!cam) return false;
+      // 取物件的世界坐标
+      const p = it.obj.getWorldPosition(new (it.obj.position.constructor)());
+      // 直接摆相机：物件的东南上方看过去
+      cam.position.set(p.x + 4.2, p.y + 3.0, p.z + 4.2);
+      cam.lookAt(p.x, p.y + 1.0, p.z);
+      cam.updateProjectionMatrix();
+      return true;
+    },
+    overview() {
+      const cam = shell.view3d && shell.view3d.camera;
+      if (!cam) return false;
+      cam.position.set(14, 11, 18);
+      cam.lookAt(0, 1.5, 0);
+      cam.updateProjectionMatrix();
+      return true;
+    },
+  };
+
+  (async () => {
+    try { shell.start(); } catch (e) {}
+    try { shell.loadLocation('slum'); } catch (e) {}
+    // 等资产预热 + 回填
+    const t0 = Date.now();
+    while (Date.now() - t0 < 25000) {
+      const a = shell.assets;
+      const found = collect().length;
+      if (a && a.report.ready > 0 && found > 0) break;
+      await wait(300);
+    }
+    // 再切一次，确保新世界用上缓存
+    try { shell.loadLocation('factoryZone'); } catch (e) {}
+    await wait(400);
+    try { shell.loadLocation('slum'); } catch (e) {}
+    await wait(600);
+    items = collect();
+    window.__shot.ready = true;
+  })();
+})();
+</script>
+</body>
+</html>

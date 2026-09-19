@@ -22,6 +22,8 @@
     "verify:3d-mobile": "node scripts/verify-3d-mobile.cjs",
     "verify:3d-geometry": "node scripts/verify-3d-hud-geometry.cjs",
     "verify:3d-live": "node scripts/verify-3d-live.cjs",
+    "verify:3d-assets": "node scripts/verify-3d-assets.cjs",
+    "shot:3d-assets": "node scripts/shot-3d-assets.cjs",
     "build:legacy": "python build.py",
     "deploy": "npm run build:legacy && npm run verify:deploy && netlify deploy --dir=dist --prod",
     "deploy:dry": "npm run build:legacy && npm run verify:deploy && netlify deploy --dir=dist",
