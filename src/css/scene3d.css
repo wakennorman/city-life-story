@@ -916,6 +916,13 @@ body.s3-first-mode {
   --accent-hover: #e9ca78;
   --accent-glow: rgba(216, 180, 90, 0.16);
 
+  /* 天赋稀有度三色（2026-09-19）：白底卡片那套 #888 / #4a7c59 铺在近黑
+     卡片上只有 2~3:1，读得出"有一行字"、读不出"写了什么"。
+     这里给同一色系换一档更亮的，语义不变（灰=普通、绿=优秀、金=稀有）。 */
+  --rarity-common: #cfcabe;
+  --rarity-uncommon: #79cf9c;
+  --rarity-rare: #f0c869;
+
   --success: #7cc48a;
   --success-bg: rgba(124, 196, 138, 0.13);
   --danger: #e0806a;
@@ -1046,6 +1053,34 @@ body.s3-first-mode .modal-box .btn-warning {
   border-color: rgba(238, 202, 128, 0.6);
   color: #16120a !important;
   font-weight: 700;
+}
+
+/* ── 天赋揭晓弹窗的两个按钮（2026-09-19）─────────────────────────────────
+   它们**不在** `.modal-box .btn` 那套里 —— main.js 给它们写的是内联样式
+   （主按钮 `background:var(--accent-text)` + 白字，次按钮 1.5px 灰边）。
+   而 `--accent-text` 在本皮肤里没有重新赋值：style.css 里它压根没定义，
+   走的是 JS 的 fallback `#4a7c59`（暗绿）。暗绿底 + 白字坐在近黑卡片上，
+   正是恒稳截图里"最看不清的那一块"。
+   修法不是改那个 fallback（它服务 2D 白底），而是在 3D 作用域里
+   按同一套语言重写：主按钮 = 金渐变深字（同 .btn-primary），
+   次按钮 = 金描边（同 .btn）。★ 内联样式只能靠 !important 压。 */
+body.s3-first-mode .talent-reveal-btn.is-primary {
+  background: linear-gradient(180deg, #e0bd63 0%, #b2903a 100%) !important;
+  border: 1px solid rgba(240, 214, 140, 0.72) !important;
+  color: #14160f !important;
+}
+body.s3-first-mode .talent-reveal-btn.is-primary:hover {
+  background: linear-gradient(180deg, #eccb76 0%, #c09c44 100%) !important;
+  box-shadow: 0 0 22px rgba(216, 180, 90, 0.34);
+}
+body.s3-first-mode .talent-reveal-btn.is-ghost {
+  background: rgba(216, 180, 90, 0.10) !important;
+  border: 1px solid rgba(232, 228, 216, 0.30) !important;
+  color: #ded8c8 !important;
+}
+body.s3-first-mode .talent-reveal-btn.is-ghost:hover {
+  background: rgba(216, 180, 90, 0.20) !important;
+  border-color: rgba(216, 180, 90, 0.55) !important;
 }
 
 /* 输入框：暗底 + 金框，聚焦时给一圈柔光 */

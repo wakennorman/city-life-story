@@ -1144,8 +1144,13 @@ class GoToPointTask extends Task {
     const sp = Math.min(a.speed * this.speedMul, 2.4);
     const r = sys._slide(o.position.x, o.position.z,
       o.position.x + (dx / d) * sp * dt, o.position.z + (dz / d) * sp * dt, KIND_R.ped);
-    /* 走不过去（摊位 / 墙挡死）→ 报 blocked 结束，别原地顶着墙抖。 */
-    if (r.hit) { this.blocked = true; return true; }
+    /* ★ hit 不等于"停下来"（2026-09-19）：分轴解算在撞墙时产出的正是
+       **沿墙滑**的那一份位移 —— 把它丢掉，角色就会在墙角原地抖，
+       而且是"任务一直没完成"的那种抖。
+       只有**一步也没挪动**才算真的走不过去（摊位/墙挡死），
+       这时才报 blocked，让父任务另作打算。 */
+    const moved = Math.abs(r.x - o.position.x) + Math.abs(r.z - o.position.z);
+    if (r.hit && moved < 1e-4) { this.blocked = true; return true; }
     o.position.x = r.x;
     o.position.z = r.z;
     o.rotation.y = Math.atan2(dx, dz);
@@ -1220,6 +1225,12 @@ class WanderWalkTask extends Task {
     this.pauseT = pauseT;
     this.turnCd = 0;
     this.pauseCd = 2 + Math.random() * 9;
+    /* ★ 绕障计时器（2026-09-19）：见 tick() 里"先横让一步"那段的说明。
+       为什么它必须是**任务上的字段**而不是角色上的裸字段：
+       掉头（a.dir）是角色级状态，但"我正往哪一侧绕、绕了多久"是这一次
+       行走过程的状态 —— 换个任务就该丢掉，跟着角色走会污染下一次行为。 */
+    this.avoidT = 0;
+    this.avoidSign = 0;
   }
   tick(a, dt, sys) {
     const o = a.obj;
@@ -1250,12 +1261,47 @@ class WanderWalkTask extends Task {
           dz += pz * push * 0.6;
         }
       }
+      /* ★★ 绕障：撞上东西先**横向让一步**，让不开才掉头（2026-09-19）。
+         恒稳反馈「这个人一直在这里打转」的根因就在这里 ——
+         沿街行走是**只沿 z 推进**（x 恒不变），于是人行道上任何一个横跨的
+         盒子都会把他锁进两段障碍之间的缝里：
+           往前撞 → 掉头 → 往回撞 → 掉头 → …
+         掉头**永远走不出这段缝**（两端都是墙），只有横向让开能出去。
+         实测（diag-airwall）：slum 里 #3 号行人被困在 z∈(-37.87,-36.54)
+         的 1.3m 缝中，路径走了 5.77m、净位移 0.47m —— 他不是在散步，他被困住了。
+         ★ 让的方向优先**街心**：人行道的另一侧是墙根与摊位，往那边让只会更堵；
+           街心那侧也堵，才退而往墙根试。 */
+      if (this.avoidT > 0) {
+        this.avoidT -= dt;
+        /* 0.6 而不是 0.85：横让是为了**绕过眼前的箱子**，不是为了换一条路走。
+           一次绕障累计横移 ≤ 0.6m（1.0s × 0.6 × speed），够绕过一个垃圾桶，
+           又不至于把整条人流从人行道平移到车道上去。 */
+        dx += this.avoidSign * a.speed * 0.85 * dt;
+      }
       const r = sys._slide(x0, z0, x0 + dx, z0 + dz, KIND_R.ped);
       if (r.hit) {
-        /* 撞墙 → 换方向。但必须带冷却：每帧都换会在墙前来回抖，
-           比穿墙更难看（而且会让"行人是否在动"的断言假绿）。 */
-        this.turnCd -= dt;
-        if (this.turnCd <= 0) { a.dir *= -1; a.phase = 0; this.turnCd = 1.2; }
+        if (this.avoidT <= 0) {
+          /* 横让窗口用尽仍然撞 → 掉头，并且**重新起一个窗口**：
+             掉头只是换了个 z 方向，横让还得继续，否则下一个障碍照样困住他。
+             掉头要带冷却：每帧都换会在墙前来回抖，比穿墙更难看
+             （而且会让"行人是否在动"的断言假绿）。 */
+          this.turnCd -= dt;
+          if (this.turnCd <= 0) { a.dir *= -1; a.phase = 0; this.turnCd = 1.2; }
+          /* ★ 让的方向：**优先街心，街心堵就往路沿**。
+             这里**刻意不**加"不许走进车道"的硬约束 —— 那条约束我写了也测了：
+             行人带在巷弄里只有 0.35m 宽（road.js::PED_W），把横让钉死在带内
+             等于不许他绕，实测撞墙次数会从 5 次/12s **弹回 1179 次**，
+             比不修还糟 —— 修了打转，换来整条街的人贴着箱子抖。
+             现实里人绕过一个贴墙的垃圾桶本来就会往路面让半步，
+             一次绕障累计横移 ≈ 1.3m，够绕过箱子，不足以走到路中央。
+             ★ 这条是**实测取舍**，不要凭直觉再把它加回去。 */
+          const toCenter = -Math.sign(x0) || 1;
+          this.avoidSign = sys._blocked(x0 + toCenter * 0.85, z0, KIND_R.ped) ? -toCenter : toCenter;
+          /* 1.5s：窗口太短（1.0s 实测）会让横让在真正绕开之前就到期，
+             于是"撞—掉头—撞"重新出现（撞墙计数会从 5 次/12s 弹回 1100 次）。
+             横让是**过程**，不是一瞬间的抖动，得给它走完的时间。 */
+          this.avoidT = 1.5;
+        }
       } else {
         o.position.x = r.x;
         o.position.z = r.z;
@@ -2044,9 +2090,22 @@ export class ActorSystem {
    *   不会像法线反弹那样出现抖动或原地打转。
    */
   _slide(x0, z0, x1, z1, r) {
-    let x = x1, z = z0, hit = false;
-    if (this._blocked(x, z, r)) { x = x0; hit = true; }
-    if (this._blocked(x, z1, r)) { z = z0; hit = true; } else { z = z1; }
+    /* ★ 起点必须先测一次（2026-09-19）。
+       `hit` 的旧语义是"任一轴被挡"，而**第一轴的判定点在 dx=0 时就是脚下**
+       —— 角色一旦站在某个盒子的外扩半径内（贴着垃圾箱、被侧推进摊位），
+       脚下恒为 blocked → hit 恒为真 → 调用方在 hit 时**完全不应用结果**
+       → 位置永远不动，只剩每 1.2s 翻一次的转身动画。
+       那是**锁死**，不是走路：观感上就是"这个人一直在原地打转"。
+       修法：起点已被挡时不再"回退"（回退等于把他按死在原处），
+       而是放行 —— 走出去是唯一的脱身路径。 */
+    const stuck0 = this._blocked(x0, z0, r);
+    let x = x0, z = z0, hit = false;
+    /* 分轴：这一轴的目标点不挡就走过去，挡了就保持原值并记一次 hit。 */
+    if (!this._blocked(x1, z0, r)) x = x1; else hit = true;
+    if (!this._blocked(x, z1, r)) z = z1; else hit = true;
+    /* 起点本来就卡在盒里、但这一帧**挪出去了** → 那是脱身，不是撞墙。
+       判成 hit 会让调用方丢弃这次位移，脱身就被自己撤销了。 */
+    if (stuck0 && (x !== x0 || z !== z0)) hit = false;
     return { x, z, hit };
   }
 

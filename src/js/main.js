@@ -773,15 +773,32 @@ function rollTalents(scenario) {
  */
 function showTalentRevealModal(rolledTalents, onAccept, onDecline) {
   var rarityLabel = { common: "⚪ 普通", uncommon: "🔵 优秀", rare: "🟡 稀有" };
-  var rarityColor = { common: "#888", uncommon: "#4a7c59", rare: "#b8860b" };
+  /* ★ 稀有度色走 CSS 变量，不再写死（2026-09-19 恒稳反馈「选天赋这里太黑了」）。
+     这三支色是按**白底卡片**挑的：#888 / #4a7c59 铺在近黑卡片上
+     对比度只有 2~3:1，等于"看得见有一行字、读不出是什么"。
+     改走变量后，3D 皮肤（body.s3-first-mode）重新赋值一档更亮的同色系，
+     2D 模式拿 fallback，两边都读得清。 */
+  var rarityColor = {
+    common: "var(--rarity-common,#888)",
+    uncommon: "var(--rarity-uncommon,#4a7c59)",
+    rare: "var(--rarity-rare,#b8860b)",
+  };
 
+  /* ★★ 这两个元素原来是**纯内联**的（连 class 都没有）。
+     后果：3D 首屏皮肤所有选择器都是 `.modal-overlay` / `.modal-box` 这类
+     **点名**的，一个无 class 的弹窗谁也盖不到 —— 只有 :root 变量被改了，
+     于是卡片变成近黑的 `--bg-primary`，外面再罩一层 0.72 的纯黑遮罩，
+     整屏糊死。这就是"太黑了，看不清"的根因。
+     修法不是把颜色调亮（那要同时猜 2D/3D 两套底色），而是**挂上标准类**：
+     位置/遮罩/居中交给 `.modal-overlay`，卡片交给 `.modal-box`，
+     3D 皮肤那套"中心亮边缘暗的径向渐变 + 暗色玻璃金边"就自动生效了。 */
   var overlay = document.createElement("div");
-  overlay.style.cssText =
-    "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.72);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;";
+  overlay.className = "modal-overlay talent-reveal-overlay";
+  overlay.style.cssText = "z-index:10000;padding:16px;box-sizing:border-box;";
 
   var card = document.createElement("div");
-  card.style.cssText =
-    "background:var(--bg-primary,#fff);border-radius:14px;padding:24px 20px;max-width:440px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.32);";
+  card.className = "modal-box talent-reveal-card";
+  card.style.cssText = "max-width:440px;max-height:88vh;";
 
   var html = "";
 
@@ -794,7 +811,7 @@ function showTalentRevealModal(rolledTalents, onAccept, onDecline) {
     html +=
       '<div style="color:var(--text-muted,#888);font-size:0.85rem;text-align:center;margin-bottom:20px;">这一局，命运没有给你任何天赋加成。<br>但有些人，就是靠自己走出来的。</div>';
     html +=
-      '<button id="_talent_ok" style="width:100%;padding:11px;background:var(--accent-text,#4a7c59);color:#fff;border:none;border-radius:8px;font-size:0.95rem;cursor:pointer;font-weight:600;">好，靠自己</button>';
+      '<button id="_talent_ok" class="talent-reveal-btn is-primary" style="width:100%;padding:11px;background:var(--accent-text,#4a7c59);color:#fff;border:none;border-radius:8px;font-size:0.95rem;cursor:pointer;font-weight:600;">好，靠自己</button>';
   } else {
     // 1-2天赋——揭晓结果
     var hasRare = rolledTalents.some(function (t) {
@@ -841,9 +858,9 @@ function showTalentRevealModal(rolledTalents, onAccept, onDecline) {
 
     html += '<div style="display:flex;gap:10px;margin-top:4px;">';
     html +=
-      '<button id="_talent_decline" style="flex:1;padding:10px;background:transparent;color:var(--text-muted,#888);border:1.5px solid var(--border,#ddd);border-radius:8px;font-size:0.88rem;cursor:pointer;">放弃，靠自己</button>';
+      '<button id="_talent_decline" class="talent-reveal-btn is-ghost" style="flex:1;padding:10px;background:transparent;color:var(--text-muted,#888);border:1.5px solid var(--border,#ddd);border-radius:8px;font-size:0.88rem;cursor:pointer;">放弃，靠自己</button>';
     html +=
-      '<button id="_talent_accept" style="flex:2;padding:10px;background:var(--accent-text,#4a7c59);color:#fff;border:none;border-radius:8px;font-size:0.92rem;cursor:pointer;font-weight:700;">✨ 接受天赋</button>';
+      '<button id="_talent_accept" class="talent-reveal-btn is-primary" style="flex:2;padding:10px;background:var(--accent-text,#4a7c59);color:#fff;border:none;border-radius:8px;font-size:0.92rem;cursor:pointer;font-weight:700;">✨ 接受天赋</button>';
     html += "</div>";
   }
 
