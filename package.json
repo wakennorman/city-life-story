@@ -59,7 +59,8 @@
     "test:unit": "node tests/finance.test.cjs && node tests/finance.canonical.test.cjs && node tests/newsPriceMods.test.cjs && node tests/newsPoolPurity.test.cjs && node tests/eventSlotStarvation.test.cjs && node tests/triggerRegistry.test.cjs && node tests/rngHygiene.test.cjs && node tests/difficulty.canonical.test.cjs && node tests/skillBonuses.canonical.test.cjs && node tests/naming.canonical.test.cjs && node tests/branchBonuses.canonical.test.cjs && node tests/fatigueReduction.canonical.test.cjs && node tests/workModifier.canonical.test.cjs && node tests/statusInteractions.canonical.test.cjs && node tests/emotionMeta.canonical.test.cjs && node tests/reputation.canonical.test.cjs && node tests/illnessNeedsImpact.canonical.test.cjs && node tests/needsDecay.canonical.test.cjs && node tests/investmentAssetLookup.canonical.test.cjs && node tests/travelHops.canonical.test.cjs && node tests/travelApCost.canonical.test.cjs && node tests/sortUtils.canonical.test.cjs && node tests/skillSynergy.canonical.test.cjs",
     "typecheck": "npx -y -p typescript@6.0.3 tsc --noEmit",
     "verify:ai-viewer": "node scripts/verify-ai-viewer.cjs",
-    "serve:viewer": "node scripts/serve-viewer.cjs"
+    "serve:viewer": "node scripts/serve-viewer.cjs",
+    "check:cash-reconcile": "node scripts/diag-cash-reconcile.cjs"
   },
   "devDependencies": {
     "@types/three": "^0.186.0",
