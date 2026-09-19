@@ -33,7 +33,16 @@ const OUT = path.join(ROOT, 'dev/_3dtest/shots-textures');
 /* 一块板在贴图里的像素边长 —— 与 materials.js 的 gridCount 同一套算法。
    为了不重复实现，这里直接问页面要（见下面 evaluate）。 */
 
-async function blockCV(sharp, file, block, region) {
+/* ★★ 多尺度块级 CV（2026-09-19 修）—— 原实现用单一固定块 `width/5`，会被**混叠**骗过：
+     周期性纹理与块大小对齐时，每块含等量明/暗 → 块均值全相同 → CV 读成 0。
+     合成棋盘实测：块=周期→68.75%，块=2×周期→**0.00%**（完全失明）。
+     真实影响：`ground.paver` 用 `width/5`(205px) 读 **0.87%**，
+     多尺度真值 **5.04%（低估 6 倍）** —— 会被误判成"纯色"。
+     取一组互质块大小的**最大值**，混叠就无从发生。
+     （完整论证与独立门禁见 `scripts/verify-textures.cjs`） */
+const BLOCK_SCALES = [9, 12, 16, 21, 25, 32];
+
+async function blockCVAt(sharp, file, block, region) {
   let img = sharp(file).greyscale();
   if (region) img = img.extract(region);
   const { data, info } = await img.raw().toBuffer({ resolveWithObject: true });
@@ -51,8 +60,19 @@ async function blockCV(sharp, file, block, region) {
     }
   }
   const m = means.reduce((a, b) => a + b, 0) / means.length;
+  if (!m) return null;
   const sd = Math.sqrt(means.reduce((a, b) => a + (b - m) ** 2, 0) / means.length);
-  return { mean: m, sd, cv: sd / m };
+  return { mean: m, sd, cv: sd / m, block };
+}
+
+/** 多尺度取最大 —— 返回最高 CV 的那个尺度（防混叠） */
+async function blockCV(sharp, file, _blockIgnored, region) {
+  let best = null;
+  for (const blk of BLOCK_SCALES) {
+    const r = await blockCVAt(sharp, file, blk, region);
+    if (r && (!best || r.cv > best.cv)) best = r;
+  }
+  return best;
 }
 
 (async () => {
@@ -91,12 +111,11 @@ async function blockCV(sharp, file, block, region) {
   console.log('  ' + '贴图'.padEnd(24) + '均值'.padEnd(8) + 'CV');
   for (const n of names) {
     const f = path.join(OUT, `${n}.png`);
-    const meta = await sharp(f).metadata();
-    /* 一块板在贴图里的像素边长 = 纹理边长 / 格数。这里直接按"板 ≈ 纹理的 1/5"
-       取块 —— 只为了拿一个跨贴图可比的读数，不必精确。 */
-    const block = Math.max(16, Math.round(meta.width / 5));
-    const st = await blockCV(sharp, f, block);
-    if (st) console.log('  ' + n.padEnd(24) + st.mean.toFixed(1).padEnd(8) + (st.cv * 100).toFixed(2) + '%');
+    /* 多尺度取最大（见文件头 blockCV 注释）—— 单一固定块会被周期性条纹混叠骗过。
+       这里不再传块大小：函数内部扫一组互质尺度取最高 CV。 */
+    const st = await blockCV(sharp, f, null);
+    if (st) console.log('  ' + n.padEnd(24) + st.mean.toFixed(1).padEnd(8)
+      + (st.cv * 100).toFixed(2) + '%' + `  (块=${st.block})`);
   }
 
   /* ★ 构建耗时预算。normalFromHeight 是逐像素 Sobel，EXT(1024²) 一张 = 100 万次循环，
