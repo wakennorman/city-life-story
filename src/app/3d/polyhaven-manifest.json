@@ -1,0 +1,153 @@
+{
+  "_generated": "scripts/gen-polyhaven-manifest.cjs —— 请勿手改",
+  "source": "Poly Haven",
+  "license": "CC0 1.0 (Public Domain)",
+  "licenseUrl": "https://polyhaven.com/license",
+  "commercialUse": true,
+  "attributionRequired": false,
+  "units": "meter",
+  "groups": {
+    "detail": {
+      "note": "城中村 / 老城区标志性细节（贴在建筑上或摆在街边）",
+      "items": [
+        {
+          "name": "fire-hydrant",
+          "file": "fire-hydrant.glb",
+          "w": 0.275,
+          "h": 0.799,
+          "d": 0.318
+        },
+        {
+          "name": "metal-gutter",
+          "file": "metal-gutter.glb",
+          "w": 1.726,
+          "h": 1.273,
+          "d": 1.666
+        },
+        {
+          "name": "rollershutter-door",
+          "file": "rollershutter-door.glb",
+          "w": 1.08,
+          "h": 2.4,
+          "d": 0.3
+        },
+        {
+          "name": "rollershutter-window-1",
+          "file": "rollershutter-window-1.glb",
+          "w": 2.1,
+          "h": 1.851,
+          "d": 0.3
+        },
+        {
+          "name": "rollershutter-window-2",
+          "file": "rollershutter-window-2.glb",
+          "w": 1.6,
+          "h": 1.561,
+          "d": 0.168
+        },
+        {
+          "name": "rollershutter-window-3",
+          "file": "rollershutter-window-3.glb",
+          "w": 0.976,
+          "h": 1.546,
+          "d": 0.153
+        }
+      ]
+    },
+    "structure": {
+      "note": "结构件（可攀附建筑、也可独立摆放）",
+      "items": [
+        {
+          "name": "chainlink-fence",
+          "file": "chainlink-fence.glb",
+          "w": 3.906,
+          "h": 3.468,
+          "d": 1.115
+        },
+        {
+          "name": "electricity-poles",
+          "file": "electricity-poles.glb",
+          "w": 2.025,
+          "h": 10.039,
+          "d": 0.852
+        },
+        {
+          "name": "fire-escape",
+          "file": "fire-escape.glb",
+          "w": 4.894,
+          "h": 6.466,
+          "d": 1.657
+        }
+      ]
+    },
+    "road": {
+      "note": "道路 / 工地设施",
+      "items": [
+        {
+          "name": "road-barrier",
+          "file": "road-barrier.glb",
+          "w": 1.545,
+          "h": 0.831,
+          "d": 0.639
+        },
+        {
+          "name": "road-barrier-2",
+          "file": "road-barrier-2.glb",
+          "w": 1.565,
+          "h": 1.112,
+          "d": 0.442
+        }
+      ]
+    },
+    "facade": {
+      "note": "模块化建筑立面（可拼装成楼体）",
+      "items": [
+        {
+          "name": "apartments-facade",
+          "file": "apartments-facade.glb",
+          "w": 3.776,
+          "h": 3.055,
+          "d": 3.63
+        },
+        {
+          "name": "factory-facade",
+          "file": "factory-facade.glb",
+          "w": 9.35,
+          "h": 3.025,
+          "d": 3.556
+        }
+      ]
+    }
+  },
+  "hdri": {
+    "day-clearsky": {
+      "note": "下午 · 晴"
+    },
+    "day-cloudy": {
+      "note": "上午 · 多云"
+    },
+    "dusk": {
+      "note": "傍晚 · 暖"
+    },
+    "night": {
+      "note": "夜间"
+    }
+  },
+  "textures": {
+    "brick-wall": {
+      "file": "brick-wall.jpg"
+    },
+    "concrete-wall": {
+      "file": "concrete-wall.jpg"
+    },
+    "paving": {
+      "file": "paving.jpg"
+    }
+  },
+  "counts": {
+    "models": 13,
+    "groups": 4,
+    "hdri": 4,
+    "textures": 3
+  }
+}

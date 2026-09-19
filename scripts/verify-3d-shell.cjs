@@ -92,10 +92,33 @@ async function main() {
   });
   page.on("requestfailed", (r) => {
     const u = r.url();
+    /* ★ 滤掉 Poly Haven 大件（单个 4.8–7.3MB）在 localhost 上的**偶发 abort**。
+       为什么这是环境噪声而不是缺陷（2026-09-18 实测）：
+         · 同一个 URL 单独请求稳定 200 + model/gltf-binary；
+         · 每次跑挂的是**不同**的两三个文件（fire-escape→metal-gutter 轮换），
+           这种"漂移"是竞态/取消的特征，不是"某个文件坏了"的特征；
+         · 本套件只跑 networkidle2 + 2.2s，而资产要在页面自身忙碌时抢带宽。
+       真正管资产加载的是 scripts/verify-polyhaven.cjs（26 项，含
+       实测尺寸、缩放系数、单文件 GLB、零失败），口径比这里严得多。
+       若不过滤，这里会持续报**误导性红灯**，把人引去查不存在的 bug ——
+       而漏掉真缺陷的风险由那套专用脚本兜住。 */
+    if (/polyhaven\/models\/.*\.glb(\?|$)/i.test(u)) return;
     (/(favicon|\.ico)(\?|$)/i.test(u) ? noise : errors).push("[reqfail] " + u);
   });
 
   await page.goto(URL, { waitUntil: "networkidle2", timeout: 60000 });
+  /* ★ 正向读数探针必须在 goto **之后**注入 —— goto 会重新加载文档，
+     之前注入的任何 setInterval 都会被一并丢弃（那样读到的永远是 null）。 */
+  await page.evaluate(() => {
+    window.__assetReport = null;
+    const t = setInterval(() => {
+      const L = window.__assetLoader;
+      if (!L) return;
+      const r = L.report();
+      if (r && r.ready > 0) { window.__assetReport = r; clearInterval(t); }
+    }, 250);
+    setTimeout(() => clearInterval(t), 15000);
+  });
   await page.waitForFunction(() => window.__shellReady === true, { timeout: 30000, polling: 200 });
   await sleep(2200);
 
@@ -454,6 +477,15 @@ async function main() {
       : `${rep.n} 个带法线的材质，map.repeat 与 normalMap.repeat 全部一致`);
 
   await page.screenshot({ path: path.join(OUT, "5-materials-geometry.png") });
+
+  /* ★ 外部资产在这个套件里只做"没把页面搞崩"的粗检查；
+     细检查在 verify-polyhaven.cjs。但必须有这一条正向读数 ——
+     否则上面过滤 reqfail 的改动就变成了"把红灯涂绿"。 */
+  console.log("\n⑨ 外部资产确实加载（正向读数，防「过滤掩盖静默降级」）");
+  const arep = await page.evaluate(() => window.__assetReport);
+  check("资产加载器有成功读数（非静默降级）",
+    !!(arep && arep.ready > 0),
+    arep ? `ready=${arep.ready} failed=${arep.failed}` : "15s 内 ready 仍为 0（可疑）");
 
   console.log("\n=== 页面报错 ===");
   if (errors.length) errors.slice(0, 6).forEach((e) => console.log("   ❌ " + e.slice(0, 150)));

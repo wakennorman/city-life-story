@@ -26,7 +26,7 @@ import { initMaterials } from './materials.js';
 import { buildPalette, palette } from './palette.js';
 import { buildLocation } from './world.js';
 import { setAssetLoader, pumpAssets, pendingAssetCount, dropPendingAssets } from './kit.js';
-import { createAssetLoader } from './assets.js';
+import { createAssetLoader, polyHavenGroup, listPolyHaven, listHdri, SRC } from './assets.js';
 import { mergeStatics, countScene } from './merge.js';
 import { Player, IsoCamera } from './player.js';
 /* 后处理（three/addons → examples/jsm，见 three 的 exports 映射）。
@@ -473,17 +473,46 @@ export function createGame3D(opts) {
        场景照常可用 —— 这保证离线直开 / CSP 意外收紧 / 路径变更都不会白屏。 */
   const assets = createAssetLoader();
   setAssetLoader(assets);
+  /* ★ 调试口：给验证脚本断言"资产真的载入了"用。
+     ── 为什么必须是**无条件**挂，而不是藏在 SCENE3D_DEBUG 后面：
+        验证脚本无法保证那个 flag 被设置（它是构建期/启动期的事），
+        一旦没设，脚本会走 `if (!L) return {err}` 那条路 ——
+        于是**所有资产断言被静默跳过，脚本仍然报绿**。
+        这正是本项目反复警告的"假通过"。宁可留一个只读全局，
+        也不能让"没测到"伪装成"测过了"。
+     ── 为什么安全：暴露的是 loader 本身（同步 get/instance），
+        它当作只读用；即便被恶意改写，也只是影响这一次会话的渲染，
+        不涉及存档与网络。 */
+  if (typeof window !== 'undefined') {
+    window.__assetLoader = assets;
+  }
   /* 只预热"路边件"所在的 roads/industrial/commercial 常用子集，
      而不是 173 个全量 —— 避免首屏后立刻打 173 个请求。 */
-  const WARM_LIST = [
-    ['roads', 'light-square'], ['roads', 'light-square-double'], ['roads', 'light-curved'],
-    ['roads', 'construction-barrier'], ['roads', 'construction-cone'],
-    ['roads', 'dumpster'], ['roads', 'electricity-pole'],
-    ['industrial', 'detail-tank'], ['industrial', 'detail-tank-large'],
-    ['industrial', 'chimney-medium'], ['industrial', 'water-tower'],
-    ['industrial', 'shipping-container-a'],
-    ['commercial', 'detail-awning'], ['commercial', 'detail-awning-wide'],
-    ['commercial', 'detail-parasol-a'],
+    const WARM_LIST = [
+      ['roads', 'light-square'], ['roads', 'light-square-double'], ['roads', 'light-curved'],
+      ['roads', 'construction-barrier'], ['roads', 'construction-cone'],
+      ['roads', 'dumpster'], ['roads', 'electricity-pole'],
+      ['industrial', 'detail-tank'], ['industrial', 'detail-tank-large'],
+      ['industrial', 'chimney-medium'], ['industrial', 'water-tower'],
+      ['industrial', 'shipping-container-a'],
+      ['commercial', 'detail-awning'], ['commercial', 'detail-awning-wide'],
+      ['commercial', 'detail-parasol-a'],
+    ];
+
+  /* ★ Poly Haven 预热清单（2026-09-18 接入）。
+     为什么单独一份而不是并进 WARM_LIST：
+       · 两源的参数形状不同（Poly Haven 的 id 既是 kit 也是 name，
+         见 assets.js::urlOf），并进去会让那份清单的语义变得含混；
+       · 更要紧的是**体积**：Poly Haven 单件带 1k 贴图 2-17MB，
+         与 Kenney 那 15 件（合计几百 KB）不是一个量级。
+         分开便于单独统计与单独失败，也便于验证脚本按源断言。
+     ★ 只预热"必然会被摆进场景"的那些 id —— 预热不摆 = 白下载。
+       清单与 world.js 里实际调用的 phProp 一一对应，改动要同步。 */
+  const WARM_LIST_PH = [
+    'rollershutter-door', 'rollershutter-window-1',
+    'fire-hydrant', 'metal-gutter',
+    'fire-escape', 'electricity-poles', 'chainlink-fence',
+    'road-barrier', 'road-barrier-2',
   ];
 
   /* ── 角色 / 相机 ────────────────────────────────────────────────────── */
@@ -679,9 +708,37 @@ export function createGame3D(opts) {
     return best;
   }
 
+  /* ★ 收敛定时器：反复 pump 直到没有待回填项，或到上限。
+     为什么这个函数是整个资产链的**关键**（2026-09-18 实测缺陷）：
+       资产是 24 个独立请求，完成顺序完全不确定。
+       任何"在某个 Promise.then 里 pump 一次"的方案，都只能覆盖
+       那一刻已就绪的子集 —— 真实症状就是
+       「9 个模型全部 ready，场景里只换上了 3 个，其余永远 pending」。
+       把"何时换上"与"哪个请求先完成"解耦，是唯一稳的做法：
+       幂等、零成本、必然收敛（每次只做"就绪即替换"）。
+     ★ 单例：重复调用先清掉旧的定时器，避免切地点时堆积多个计时器。
+     ★ 上限 40 tick（10s）：够覆盖慢网下的大 GLB，又不会永久占用定时器。 */
+  let pumpTimer = null;
+  function pumpUntilSettled() {
+    if (pumpTimer) clearInterval(pumpTimer);
+    let ticks = 0;
+    pumpTimer = setInterval(() => {
+      const n = pumpAssets();
+      assetsReplacedTotal += n;
+      ticks++;
+      /* 收敛判据用 pendingAssetCount()===0：全部换上或已被清理。
+         注意 pumpAssets 内部会剔除"包装已脱离场景"的孤儿项 ——
+         那是**清理**不是**替换**，所以另记 dropped 数以便区分
+         （见 kit.js::lastDroppedAssets）。 */
+      if (pendingAssetCount() === 0 || ticks >= 40) {
+        clearInterval(pumpTimer);
+        pumpTimer = null;
+      }
+    }, 250);
+  }
+
   /* ── 地点加载 ───────────────────────────────────────────────────────── */
-  function disposeWorld(w) {
-    if (!w) return;
+  function disposeWorld(w) {    if (!w) return;
     /* ★ 先把指向本世界的待回填登记清掉（见 kit.js::dropPendingAssets 的长注释）。
        必须在 traverse/dispose **之前**：否则那些包装 Group 会被连带 dispose，
        而登记表仍留着它们，之后 pump 会往死对象上挂模型（假通过），
@@ -781,9 +838,18 @@ export function createGame3D(opts) {
     /* 把已就绪的外部资产回填进本次构建的场景。
        ★ 必须在 mergeStatics **之前**：GLB 是静态几何，越早挂上去，
          越能一起被合并进合批，少一批 draw call。
-       ★ 未就绪的会留在 _pendingGlb 里，等 warm 完成后再 pump 一次。 */
+       ★ 这里只能换上"此刻已就绪"的那部分；剩下的交给 pumpUntilSettled()
+         （下面立刻启动）在后续若干帧里补齐。 */
     const assetReplaced = pumpAssets();
     assetsReplacedTotal += assetReplaced;
+    /* ★ 每次构建都重启一次收敛定时器（见 pumpUntilSettled 的说明）。
+       为什么要"每次"而不是只在 warm 完成时跑一次：
+       用户切地点时注册的是**新一批**包装，而 warm 的定时器早就跑完并停了
+       （它有 40 tick 上限，防止永久占用）。若不在构建时重启，
+       切地点后新登记的项就再也不会被 pump —— 表现为
+       "第一次进有细节，切一次地点细节全没了"。
+       （实测：重载后 pending 卡在 7，正是这个原因。） */
+    pumpUntilSettled();
 
     /* ★ collectLamps 必须跑在 mergeStatics **之前**。
        mergeStatics 会把静态 Mesh 烘焙合并、并从树上摘掉原对象；
@@ -942,13 +1008,37 @@ export function createGame3D(opts) {
          GLB 换上之后不再准确，验证脚本会读到过期的面数。 */
     if (!assetsWarmed) {
       assetsWarmed = true;
-      assets.warm(WARM_LIST).then((n) => {
+      /* 两源并行预热。用 Promise.all 而不是等第一个完再起第二个：
+         它们是独立的网络请求，串行只会让首屏细节到位的时间翻倍。 */
+      const kWarm = assets.warm(WARM_LIST);
+      const phWarm = typeof assets.warmPolyHaven === 'function'
+        ? assets.warmPolyHaven(WARM_LIST_PH)
+        : Promise.resolve(0);
+
+      /* ★ 每源各自完成时**立刻** pump 一次，而不是等 Promise.all。
+         为什么（2026-09-18 实测缺陷）：
+           Kenney 那 15 件合计几百 KB，Poly Haven 那 9 件 2–17MB。
+           两者耗时差一个数量级。若只在 Promise.all 之后 pump 一次，
+           先到的一批要空等最慢的那个模型（首屏会"什么都没有"好几秒）；
+           更糟的是如果那期间用户切了地点，早先登记的包装会跟着旧世界一起
+           被 drop —— 于是"资产明明 ready，场景里却没有"（本次的真实缺陷）。
+           分源 pump 让每一批就位就立刻换上。 */
+      const pumpNow = (tag, n) => {
         const replaced = pumpAssets();
         assetsReplacedTotal += replaced;
         const counts = world ? countScene(world.group) : null;
         if (counts && lastBuild) lastBuild.tris = counts.tris;
-        opts.onAssets?.({ loaded: n, replaced, report: assets.report() });
-      });
+        opts.onAssets?.({
+          loaded: n, replaced, report: assets.report(), source: tag,
+        });
+        return replaced;
+      };
+      kWarm.then((nk) => pumpNow('kenney', nk));
+      phWarm.then((nph) => pumpNow('polyhaven', nph));
+
+      /* ★ 再挂上收敛定时器兜底 —— 分源 pump 只管"某一批全到"那一刻，
+         而 24 个请求是陆续到的，中间态必须靠定时器补齐。 */
+      pumpUntilSettled();
     }
   }
   function stop() {
@@ -958,6 +1048,10 @@ export function createGame3D(opts) {
   }
   function dispose() {
     stop();
+    /* ★ 关掉收敛定时器。不清会怎样：场景销毁后计时器还在跑，
+       每 250ms 对一张空表 pump 一次 —— 不致命，但属于资源泄漏，
+       而且在"反复创建/销毁预览"的场景下会累积多个计时器。 */
+    if (pumpTimer) { clearInterval(pumpTimer); pumpTimer = null; }
     disposeWorld(world);
     ro?.disconnect();
     window.removeEventListener('resize', resize);
@@ -1005,15 +1099,33 @@ export function createGame3D(opts) {
     setTimeSlot(slot) { applyTimeSlot(slot); applyNightLights(slot === "夜间", cam.cur); },
     /** 只读当前时段（验证脚本用） */
     get timeSlot() { return currentSlot; },
-    /* ── 外部资产运行态（Kenney CC0）─────────────────────────────────────
+    /* ── 外部资产运行态（Kenney + Poly Haven，均 CC0）────────────────────
        给验证脚本断言"GLB 真的被加载/替换了"，也给调试面板看失败原因。
-       只读快照，不暴露 cache 内部对象。 */
+       只读快照，不暴露 cache 内部对象。
+
+       ★ 这里额外暴露 loader 的**清单查询**能力（polyHavenGroup / listHdri）。
+         为什么必须走 bridge 而不是让脚本去摸 window：
+         验证脚本要断言"清单里有哪些模型、尺寸多少"，
+         若靠 window 上的临时全局，谁重命名一下就断了（静默失效）。
+         走正式 API 则改错了 TS/构建就会报错。 */
     get assets() {
       return {
         pending: pendingAssetCount(),
         replacedTotal: assetsReplacedTotal,
         report: assets.report(),
         warmList: WARM_LIST.length,
+        warmListPolyHaven: WARM_LIST_PH.length,
+        polyHavenGroups: () => {
+          /* 清单里的组名。polyHavenGroup('__probe__') 返回空数组，
+             用它反查组名太绕 —— 直接从清单对象取 keys 更直接。 */
+          const all = listPolyHaven();
+          const m = new Map();
+          for (const e of all) m.set(e.name, true);
+          return ['detail', 'structure', 'road', 'facade'].filter((g) => polyHavenGroup(g).length > 0);
+        },
+        polyHavenGroup: (g) => polyHavenGroup(g),
+        listPolyHaven: () => listPolyHaven(),
+        listHdri: () => listHdri(),
       };
     },
     /* ── 只读状态 ── */

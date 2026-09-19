@@ -102,8 +102,15 @@ async function main() {
   const info = await page.evaluate(() => window.__assetProbe.snapshot());
 
   console.log("\n① 资产根路径");
-  check("探针指向 src/assets（dev 布局覆盖生效）",
-    /src\/assets\/kenney/.test(info.base), info.base);
+  /* ★ 期望值在 2026-09-18 随"两源并存"改动而更新。
+     原先是 `/src/assets/kenney` —— 那是只有 Kenney 一个源时的形状。
+     现在 base 是**资产根** `src/assets/`，两个源各自在其下分支：
+       kenney/…        （Kenney 三套 kit）
+       polyhaven/…     （Poly Haven 模型/HDRI/贴图）
+     所以断言应该查"根"，而不是查某个源的子目录 ——
+     查子目录会让"再加一个源"永远触发假失败。 */
+  check("探针指向资产根 src/assets（dev 布局覆盖生效）",
+    /\/src\/assets\/?$/.test(info.base), info.base);
 
   console.log("\n② 真实网络请求（GLB 是不是真的被取下来了）");
   check("产生了 GLB 请求（不是全部走缓存/跳过）", info.requests.length > 0, `${info.requests.length} 个`);

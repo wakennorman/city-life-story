@@ -132,14 +132,19 @@ export function setAssetLoader(loader) { _assetLoader = loader; }
  * 生成一个"占位 + 异步替换"的物件。
  *
  * @param {string} kit        kit 名：'commercial'|'industrial'|'roads'
+ *                             （source 为 polyhaven 时 = Poly Haven 资产 id）
  * @param {string} name       GLB 名（不含 .glb）
  * @param {Function} fallback 同步兜底工厂：() => THREE.Object3D（可为 null）
- * @param {object} opt        { y: 底标高, scale, rotY, footprint }
+ * @param {object} opt        { y: 底标高, scale, rotY, footprint, source }
  * @returns {THREE.Group} 包装 Group（同步返回，立即可放进场景）
  */
 export function glbProp(kit, name, fallback, opt = {}) {
   const wrap = new THREE.Group();
-  wrap.userData.glb = { kit, name, ready: false };
+  /* ★ source 决定从哪个资产库取件：kenney（默认，兼容旧调用）或 polyhaven。
+     为什么放在 opt 里而不是加一个位置参数：glbProp 有 30+ 处既有调用，
+     加位置参数会全部错位；opt 是向后兼容的。 */
+  const source = opt.source || 'kenney';
+  wrap.userData.glb = { source, kit, name, ready: false };
 
   /* ★ 必须标记 noMerge —— 这是本模块最容易踩的坑：
      mergeStatics 会把静态 Mesh 烘焙进合批、并从树上**摘掉原对象**。
@@ -171,7 +176,7 @@ export function glbProp(kit, name, fallback, opt = {}) {
        而且在 world 被 dispose 的那一刻，祖先链可能已经被拆开 ——
        那时按祖先找就找不到，登记项会永远滞留在表里（pending 永不为 0）。
        显式记 owner 与祖先链双保险，两条路任一命中即清。 */
-  _pendingGlb.push({ wrap, kit, name, opt, owner: _currentOwner });
+  _pendingGlb.push({ wrap, kit, name, opt, source, owner: _currentOwner });
   return wrap;
 }
 
@@ -195,10 +200,35 @@ export function setAssetOwner(group) {
  */
 export function pumpAssets() {
   if (!_assetLoader) return 0;
-  let done = 0;
+  let done = 0, dropped = 0;
   for (let i = _pendingGlb.length - 1; i >= 0; i--) {
     const it = _pendingGlb[i];
-    const inst = _assetLoader.instance(it.kit, it.name, it.opt);
+    /* ★ 自愈：先剔除**已经不在场景里**的孤儿登记项（2026-09-18 实测缺陷）。
+       症状：9 个模型全部 ready，场景里却只换上 3 个，且 pendingAssetCount()
+       永远不归零（定时 pump 跑满上限也清不掉）。
+
+       成因：一次构建登记的包装 Group，若这一次构建的 world 随后被另一次
+       构建顶替（create3DShell 内部先建一次、探针页/游戏再 loadLocation 一次），
+       那批包装就不再挂在任何 scene 下。此时：
+         · instance() 仍会成功（原型在缓存里，与树无关）；
+         · 但把模型挂到一个已脱离场景的 Group 上，**画面毫无变化**，
+           而计数器会显示"替换成功" —— 正是本项目最忌讳的假通过。
+       所以判据不是"能不能实例化"，而是"这个包装还在不在树里"：
+       经 ctx.place() 投放的包装必有父节点（地点组）；parent 为 null
+       即说明它已连同所属地点被摘掉。
+
+       ★ 为什么不用 it.owner 判断：owner 可能为 null（旧路径/未设 scope），
+         那条判据会失效；parent 判据对所有路径都成立。两者互补 ——
+         dropPendingAssets 管"按 owner 主动清"，这里管"兜底扫尾"。 */
+    if (!it.wrap.parent) {
+      _pendingGlb.splice(i, 1);
+      dropped++;
+      continue;
+    }
+    /* ★ 必须带上 source —— Kenney 与 Poly Haven 的 URL 规则不同，
+       漏传会静默走 Kenney 分支 → 400，然后"永远 pending"。
+       （spread 会把 opt 里的 source 也带上，这里显式传更清楚。） */
+    const inst = _assetLoader.instance(it.source || 'kenney', it.kit, it.name, it.opt);
     if (!inst) continue; // 尚未就绪或已失败 → 保留兜底，等下次
     /* 先清空兜底再挂真模型：两者不能同时在树里，否则会看到"重影"
        （程序化方块与 GLB 叠在一起）。 */
@@ -211,8 +241,17 @@ export function pumpAssets() {
     _pendingGlb.splice(i, 1);
     done++;
   }
+  /* 记下扫掉的孤儿数：pump 返回值只统计"真的换上了"，
+     孤儿是**清掉**而不是**换上**的，必须可区分 ——
+     否则"pending 归零"可以靠清孤儿达成，那是另一种假通过。 */
+  _lastDropped = dropped;
   return done;
 }
+
+/** 上一次 pumpAssets 扫掉的孤儿登记项数（验证脚本用）。
+ *  ≠0 说明发生过"构建被顶替"，属正常，但必须可观测。 */
+let _lastDropped = 0;
+export function lastDroppedAssets() { return _lastDropped; }
 
 /** 待回填数量（0 表示全部已就绪或已放弃）—— 验证脚本用它做收敛断言。 */
 export function pendingAssetCount() { return _pendingGlb.length; }
@@ -365,6 +404,89 @@ export function parasolProp({ variant = 'a' } = {}) {
   return glbProp('commercial', `detail-parasol-${variant}`, null, {
     footprint: { w: 1.6, d: 1.6, h: 2.4 },
   });
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Poly Haven 资产（CC0，米制，单文件 GLB）—— 2026-09-18 接入
+
+   与上面 Kenney 那组的**本质差别**：
+     · 单位不同：Poly Haven 是真实米制（×1），Kenney 的 1 单位≈8m（×8）。
+       故 footprint 必须填**真实米数**，写错了建筑会穿模或悬空。
+     · URL 规则不同：`polyhaven/models/<id>/<id>.glb`。id 既是"kit"也是"name"
+       （见 assets.js::urlOf），调用时两处传同一个 id。
+     · 单文件：贴图已内嵌，不请求 .bin / textures/*.jpg。
+       这正是不再触发下载管理器（IDM）拦截的原因。
+
+   命名约定：函数名后缀 Prop，与 Kenney 组一致；id 取自 polyhaven-manifest.json。
+   ═════════════════════════════════════════════════════════════════════════ */
+
+/** Poly Haven 通用取件：id 既作 kit 也作 name（urlOf 要求两处一致）。 */
+function phProp(id, fallback, opt = {}) {
+  return glbProp(id, id, fallback, { ...opt, source: 'polyhaven' });
+}
+
+/** 卷帘门（detail）—— 城中村/批发市场最典型的门脸件。
+ *  真实尺寸约 2.4m 高。挂在店铺门洞上，把"墙面的洞"变成"能拉下来的门"。 */
+export function shutterDoorProp() {
+  return phProp('rollershutter-door', null, {
+    footprint: { w: 3.2, d: 0.25, h: 2.4 },
+  });
+}
+
+/** 卷帘窗 1/2/3（detail）—— 三种尺寸的窗版卷帘，用于店面侧窗。 */
+export function shutterWindowProp({ variant = 1 } = {}) {
+  const id = `rollershutter-window-${variant}`;
+  return phProp(id, null, { footprint: { w: 1.6, d: 0.2, h: 1.4 } });
+}
+
+/** 消防栓（detail）—— 真实 0.8m 高，摆在人行道边。
+ *  这是"市政基础设施"最省笔墨的一笔：一个红栓就能说明这里有管网。 */
+export function hydrantProp() {
+  return phProp('fire-hydrant', () => {
+    const g = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.13, 0.62, 10), P.common.metalLight);
+    body.position.y = 0.31; body.castShadow = true; g.add(body);
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.1, 10), P.common.metal);
+    cap.position.y = 0.66; g.add(cap);
+    g.userData.footprint = { w: 0.28, d: 0.28, h: 0.8 };
+    return g;
+  }, { footprint: { w: 0.275, d: 0.318, h: 0.799 } });
+}
+
+/** 金属落水管（detail）—— 沿建筑外墙贴一条竖管，成本极低但大幅去掉"光板感"。 */
+export function gutterProp() {
+  return phProp('metal-gutter', null, { footprint: { w: 0.2, d: 0.2, h: 6 } });
+}
+
+/** 外挂消防梯（structure）—— 6.5m 高，老厂房/宿舍楼侧墙的强烈叙事件。 */
+export function fireEscapeProp() {
+  return phProp('fire-escape', null, { footprint: { w: 2.4, d: 1.2, h: 6.466 } });
+}
+
+/** 高压电线杆（structure）—— 10m 高，带横担与绝缘子，比程序化圆杆可信得多。 */
+export function powerPoleProp() {
+  return phProp('electricity-poles', null, { footprint: { w: 2.4, d: 1.2, h: 10.039 } });
+}
+
+/** 铁丝网围栏（structure）—— 3.5m 高，工地/厂区/废地的边界。 */
+export function chainlinkProp() {
+  return phProp('chainlink-fence', null, { footprint: { w: 3.5, d: 0.1, h: 3.468 } });
+}
+
+/** 路障（road）—— 市政封路件。 */
+export function roadBarrierProp({ variant = 1 } = {}) {
+  const id = variant === 2 ? 'road-barrier-2' : 'road-barrier';
+  return phProp(id, null, { footprint: { w: 2.2, d: 0.5, h: 1.1 } });
+}
+
+/** 公寓立面（facade）—— 一整片墙体，用于快速起一栋有窗的楼。 */
+export function apartmentsFacadeProp() {
+  return phProp('apartments-facade', null, { footprint: { w: 8, d: 0.5, h: 3.055 } });
+}
+
+/** 厂房立面（facade）—— 工业区的高窗墙面。 */
+export function factoryFacadeProp() {
+  return phProp('factory-facade', null, { footprint: { w: 8, d: 0.5, h: 3.055 } });
 }
 
 

@@ -1,5 +1,5 @@
 /**
- * 外部 3D 资产加载器（Kenney City Kit / CC0）
+ * 外部 3D 资产加载器（Kenney City Kit / Poly Haven，均 CC0）
  *
  * 为什么单独一个模块：
  *   3D 内置几何（kit.js）是同步的、随包内的 —— 而外部 GLB 是**异步**的，
@@ -16,6 +16,21 @@
  *      所以每个 GLB 必须从它自己 kit 的子目录加载，贴图才能解析对。
  *   ④ 加载失败必须能降级：调用方拿到 null 后回退到程序化几何。
  *
+ * ── 两个来源的差异（★ 接入前必读，两处都踩过） ──────────────────────────
+ *
+ *   | | Kenney | Poly Haven |
+ *   |---|---|---|
+ *   | 文件 | `<kit>/<name>.glb`（单文件，贴图内嵌） | `<as>/<原名>.gltf` + `.bin` + `textures/*.jpg`（**分离**） |
+ *   | 坐标系 | **1 单位 ≈ 8m** | **1 单位 = 1m**（Blender 实尺导出） |
+ *   | 测法 | 反推（三个物件交叉验证） | 直接读：卷帘门 2.40m、消防栓 0.80m、电杆 10.0m |
+ *
+ *   ★ 分离式 glTF 的陷阱：主 .gltf 用**相对路径**引用 `xxx.bin` 与
+ *     `textures/xxx.jpg`。所以：
+ *       · 下载时必须连附属文件一起下、且**保持目录结构**（见 fetch-polyhaven.cjs）
+ *       · 加载时 URL 指到 .gltf 即可，GLTFLoader 会自己解析相对路径
+ *     如果只下了主文件（我第一次就是这样），浏览器会**静默不显示模型** ——
+ *     不报错、不 404（因为网络请求根本没发出去到正确路径），最难查。
+ *
  * 用法：
  *   const assets = createAssetLoader();
  *   assets.warm(['commercial', 'roads']);        // 预热（不阻塞）
@@ -28,16 +43,28 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 /* 清单随包内联（与 gamedata.json 同机制，走 esbuild 的 json loader）。
    这样 warm('commercial') 能枚举该 kit 的模型名，且不额外发请求。 */
 import kenneyManifest from './kenney-manifest.json';
+/* Poly Haven 清单：由 scripts/gen-polyhaven-manifest.cjs 生成，
+   数据来自 src/assets/polyhaven/manifest.json（下载脚本写的，含 md5 与来源 URL）。 */
+import polyhavenManifest from './polyhaven-manifest.json';
 
-/** 资产根路径。相对 app.js（位于 dist/ 根），与 dist/assets/ 对应。 */
-const ASSET_BASE_DEFAULT = 'assets/kenney/';
+/** 资产根路径。相对 app.js（位于 dist/ 根），与 dist/assets/ 对应。
+ *
+ *  ★ 语义是"**资产根**"，各源在它下面分自己的子目录（见 SRC_PATH）：
+ *      <ASSET_BASE>/kenney/<kit>/<name>.glb
+ *      <ASSET_BASE>/polyhaven/models/<as>/<x>.gltf
+ *
+ *  ⚠️ 历史包袱：这个常量原来叫"Kenney 根"，值是 'assets/kenney/'。
+ *     引入 Poly Haven 后若沿用旧值，拼出来会是
+ *     `assets/kenney/polyhaven/models/...` —— 静默 404（降级到兜底几何）。
+ *     所以改为 'assets/'，并同步改探针/验证脚本传入的 base。
+ */
+const ASSET_BASE_DEFAULT = 'assets/';
 
 /* ★ 为什么要可覆盖：
-   生产（dist/）里资产在 dist/assets/kenney/ —— 与 app.js 同级，故相对路径即可。
+   生产（dist/）里资产在 dist/assets/ —— 与 app.js 同级，故相对路径即可。
    但 dev 预览页是**从项目根**提供服务的（见 scripts/lib/serve.cjs），
-   那时 'assets/kenney/' 会指向项目根下已有的 assets/（只放 icons），是 404。
-   dev 侧的真实位置是 src/assets/kenney/。故允许注入 base。
-   这样一套代码在两种布局下都成立，不必为了 dev 复制一份 8.5MB 资产。 */
+   那时 'assets/' 会指向项目根下已有的 assets/（只放 icons），是 404。
+   dev 侧的真实位置是 src/assets/。故允许注入 base。 */
 let ASSET_BASE = ASSET_BASE_DEFAULT;
 
 /** 覆盖资产根路径（供 dev 预览/验证脚本调用）。 */
@@ -50,6 +77,60 @@ export function assetBase() { return ASSET_BASE; }
 
 /** 已知 kit 白名单 —— 防拼错路径，也让验证脚本能枚举。 */
 export const KITS = ['commercial', 'industrial', 'roads'];
+
+/* ══════════════════════════════════════════════════════════════════════════
+   两个资产源：Kenney（城市套件）与 Poly Haven（城中村细节）
+   ══════════════════════════════════════════════════════════════════════════
+
+   为什么要抽象出"源"这一层：
+     两家的**文件布局**和**单位**都不同，但调用方不该关心这些。
+     调用方只说"给我一个卷帘门"，由这里决定去哪个目录、乘几倍。
+
+   源标识（source）：
+     'kenney'      → assets/kenney/<kit>/<name>.glb      缩放 ×8（1单位≈8m）
+     'polyhaven'   → assets/polyhaven/models/<as>/<x>.gltf  缩放 ×1（米制）
+
+   ★ Poly Haven 的缩放是 **1.0**，不是 8。
+     实测（读 glTF 的 POSITION accessor min/max）：
+       卷帘门 2.40m 高 · 消防栓 0.80m · 电杆 10.0m · 消防梯 6.47m
+     全部落在真实尺寸区间 —— 说明它是**按米导出的**。
+     若误用 Kenney 的 8，这些物件会变成 19m 高的大门、6.4m 的消防栓，
+     整条街的尺度会被毁掉（而且不报错，只是"东西大得离谱"）。
+   ────────────────────────────────────────────────────────────────────────── */
+
+/** 源标识常量 */
+export const SRC = { KENNEY: 'kenney', POLYHAVEN: 'polyhaven' };
+
+/** 各源的根路径（相对 app.js / 项目根；由 setAssetBase 注入绝对前缀） */
+const SRC_PATH = {
+  [SRC.KENNEY]: 'kenney',
+  [SRC.POLYHAVEN]: 'polyhaven/models',
+};
+
+/** 各源的默认缩放（模型单位 → 米） */
+const SRC_SCALE = {
+  [SRC.KENNEY]: 8,     // 见下方 M_PER_UNIT 的长注释
+  [SRC.POLYHAVEN]: 1,  // 米制，不换算
+};
+
+/** 各源的文件扩展名 */
+const SRC_EXT = {
+  [SRC.KENNEY]: '.glb',
+  /* ★ Poly Haven 也走 .glb —— 但**不是**下载来的原始格式。
+     原始是分离式 glTF（.gltf + .bin + textures/），有一个致命问题：
+       `.bin` 的 MIME 是 application/octet-stream，
+       **下载管理器（IDM/迅雷/FDM）会把它抢走** —— 浏览器把响应当成
+       "要下载的文件"交给外部程序，页面拿到空的 204，请求根本不到服务器。
+       GLTFLoader 于是报 `Failed to load buffer`，模型静默消失。
+     实测（装了 IDM 的机器）：fetch 那个 .bin → {status:204, bytes:0}。
+     这不是个别环境问题：任何装了下载管理器的玩家都会中招。
+
+     解法：scripts/pack-polyhaven-glb.cjs 把分离式 glTF 合并成单文件 GLB
+     （JSON + BIN + 贴图全内嵌）。MIME 变成 model/gltf-binary，
+     不在下载管理器的接管名单里；顺带每模型从 7 个请求降到 1 个。
+     校验见 scripts/verify-glb-pack.cjs（52 项：容器/尺寸/内嵌/无外链）。 */
+  [SRC.POLYHAVEN]: '.glb',
+};
 
 /* ── 单位换算：Kenney 模型的"1 单位"不是 1 米 ────────────────────────────────
    ★ 这是接入外部资产时最容易搞错、且症状最隐蔽的一点：
@@ -103,36 +184,67 @@ export const LOAD_STATE = { PENDING: 'pending', READY: 'ready', FAILED: 'failed'
 
 export function createAssetLoader() {
   const loader = new GLTFLoader();
-  /** key = `${kit}/${name}` → { state, proto, error } */
+  /** key = `${source}/${kit}/${name}` → { state, proto, error } */
   const cache = new Map();
   /** 某一批的等待者：warm 返回的 Promise 用得上 */
   const stats = { requested: 0, ready: 0, failed: 0 };
 
-  const keyOf = (kit, name) => `${kit}/${name}`;
+  /* ★ 兼容旧签名：原来只有 Kenney，调用方写 load(kit, name)。
+     现在第一位是 source。为了让既有代码不改，做一次归一化：
+     若第一个参数是已知 kit 名（商业/工业/道路三套），就当成省略了 source。 */
+  function normSource(a, b) {
+    if (a === SRC.KENNEY || a === SRC.POLYHAVEN) return { source: a, kit: b };
+    return { source: SRC.KENNEY, kit: a, name: b };
+  }
 
-  function slot(kit, name) {
-    const k = keyOf(kit, name);
+  const keyOf = (source, kit, name) => `${source}/${kit}/${name}`;
+
+  function slot(source, kit, name) {
+    const k = keyOf(source, kit, name);
     let s = cache.get(k);
     if (!s) {
-      s = { state: LOAD_STATE.PENDING, proto: null, error: null };
+      s = { state: LOAD_STATE.PENDING, proto: null, error: null, source, kit, name };
       cache.set(k, s);
     }
     return s;
   }
 
+  /** 拼单个资产的 URL（不含 base）。
+      Kenney 是 <kit>/<name>.glb；Poly Haven 是 <as>/<as>.glb（打包后的单文件）。 */
+  function urlOf(source, kit, name) {
+    if (source === SRC.POLYHAVEN) {
+      /* ★ 用 <as>/<as>.glb 这个**规整命名**，而不是清单里记的原始
+         gltf 文件名（如 fire_hydrant_1k.gltf）。
+         为什么：打包脚本 pack-polyhaven-glb.cjs 输出的是统一命名，
+         这样 URL 可预测、不依赖清单字段，也不会因为 Poly Haven
+         改了原始文件名而失效。
+         清单里的 `file` 字段保留着，用于**溯源**（哪个源文件打出来的）。 */
+      return `${ASSET_BASE}${SRC_PATH[source]}/${kit}/${kit}.glb`;
+    }
+    return `${ASSET_BASE}${SRC_PATH[source]}/${kit}/${name}${SRC_EXT[source]}`;
+  }
+
   /**
-   * 载入一个 GLB（幂等：同一个 key 只真正加载一次）。
+   * 载入一个模型（幂等：同一个 key 只真正加载一次）。
    * **永不 reject** —— 失败写进 cache 的 error，返回 null。
+   *
+   * 支持两种调用：
+   *   load('commercial', 'building-a')        // 旧签名（Kenney）
+   *   load(SRC.POLYHAVEN, 'detail', 'fire-hydrant')
    * @returns {Promise<THREE.Object3D|null>}
    */
-  function load(kit, name) {
-    const s = slot(kit, name);
+  function load(a, b, c) {
+    const n = normSource(a, b);
+    const source = n.source;
+    const kit = n.kit;
+    const name = n.name !== undefined ? n.name : c;
+    const s = slot(source, kit, name);
     if (s.state === LOAD_STATE.READY) return Promise.resolve(s.proto);
     if (s.state === LOAD_STATE.FAILED) return Promise.resolve(null);
     if (s._inflight) return s._inflight;
 
     stats.requested++;
-    const url = `${ASSET_BASE}${kit}/${name}.glb`;
+    const url = urlOf(source, kit, name);
 
     s._inflight = new Promise((resolve) => {
       loader.load(
@@ -159,7 +271,7 @@ export function createAssetLoader() {
   }
 
   /**
-   * 预热一批 kit 的常用模型（不阻塞主流程）。
+   * 预热一批资产的常用模型（不阻塞主流程）。
    * @param {Array<[string,string]|string>} items  [kit,name] 或 kit 名（kit 名表示整个 kit）
    * @returns {Promise<number>} 成功载入数
    */
@@ -175,9 +287,31 @@ export function createAssetLoader() {
     return Promise.all(jobs).then((rs) => rs.filter(Boolean).length);
   }
 
-  /** 同步取原型（未载入或失败 → null）。调用方必须处理 null。 */
-  function get(kit, name) {
-    const s = cache.get(keyOf(kit, name));
+  /**
+   * 预热一批 Poly Haven 资产（城中村细节）。
+   * ★ 单独一个方法而不是塞进 warm：
+   *   Poly Haven 的模型普遍带 1k 贴图（单个 2-17MB），全量预热会很重。
+   *   分开调用便于按需预热 + 单独统计，也便于验证脚本区分两个源。
+   * @param {Array<string>|string} keys  组名（如 'detail'）或 ['detail','signage'] 或具体的 as 名数组
+   */
+  function warmPolyHaven(keys = []) {
+    const list = Array.isArray(keys) ? keys : [keys];
+    const jobs = [];
+    for (const k of list) jobs.push(load(SRC.POLYHAVEN, k, k));
+    return Promise.all(jobs).then((rs) => rs.filter(Boolean).length);
+  }
+
+  /**
+   * 同步取一个资产（未载入或失败 → null）。调用方必须处理 null。
+   *
+   * 支持两种调用：
+   *   get('commercial', 'building-a')                     // Kenney
+   *   get(SRC.POLYHAVEN, 'detail', 'fire-hydrant')        // Poly Haven
+   */
+  function get(a, b, c) {
+    const n = normSource(a, b);
+    const name = n.name !== undefined ? n.name : c;
+    const s = cache.get(keyOf(n.source, n.kit, name));
     return s && s.state === LOAD_STATE.READY ? s.proto : null;
   }
 
@@ -191,18 +325,25 @@ export function createAssetLoader() {
    * @param {object} pose {x,y,z,rotY,scale}
    * @returns {THREE.Object3D|null}
    */
-  function instance(kit, name, pose = {}) {
-    const proto = get(kit, name);
+  function instance(a, b, c, poseArg) {
+    const n = normSource(a, b);
+    const source = n.source;
+    const kit = n.kit;
+    const name = n.name !== undefined ? n.name : c;
+    const pose = (poseArg !== undefined ? poseArg : (n.name !== undefined ? c : poseArg)) || {};
+
+    const proto = get(source, kit, name);
     if (!proto) return null;
     const obj = proto.clone(true);
     obj.position.set(pose.x || 0, pose.y || 0, pose.z || 0);
     if (typeof pose.rotY === 'number') obj.rotation.y = pose.rotY;
-    /* ★ 尺寸换算（见上方 M_PER_UNIT 的长注释）：
-       Kenney 的 1 单位 ≈ 8m。不换算的话模型会小到几乎看不见，
-       而且**不报错** —— 只是画面里多了几个小点。
+    /* ★ 尺寸换算：两源比例不同，见上方 SRC_SCALE 的说明。
+       Kenney ×8（1单位≈8m）· Poly Haven ×1（米制）。
        pose.scale 若显式给出则优先（调用方可覆盖）。 */
     const target = SIZE_OVERRIDE[`${kit}/${name}`];
-    const s = typeof pose.scale === 'number' ? pose.scale : (target ? target : M_PER_UNIT);
+    const s = typeof pose.scale === 'number'
+      ? pose.scale
+      : (target || SRC_SCALE[source] || 1);
     obj.scale.setScalar(s);
     obj.traverse((o) => {
       if (o.isMesh) {
@@ -221,16 +362,18 @@ export function createAssetLoader() {
   /** 供验证脚本与调试面板读取的运行态快照。 */
   function report() {
     const byState = { pending: 0, ready: 0, failed: 0 };
+    const bySource = { kenney: 0, polyhaven: 0 };
     const failures = [];
     for (const [k, s] of cache) {
       byState[s.state]++;
+      if (s.source) bySource[s.source] = (bySource[s.source] || 0) + 1;
       if (s.state === LOAD_STATE.FAILED) failures.push({ key: k, error: s.error });
     }
-    return { ...stats, byState, failures, cached: cache.size };
+    return { ...stats, byState, bySource, failures, cached: cache.size };
   }
 
   return {
-    load, warm, get, instance, report, cache,
+    load, warm, warmPolyHaven, get, instance, report, cache,
     /** 覆盖本实例的资产根路径（dev 布局用）。 */
     setBase(base) { setAssetBase(base); },
   };
@@ -271,4 +414,57 @@ export function pickFor(kit, seed, n) {
     out.push(all[Math.abs(h) % all.length]);
   }
   return out;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Poly Haven 清单访问
+   ══════════════════════════════════════════════════════════════════════════
+
+   清单结构（由 scripts/gen-polyhaven-manifest.cjs 从下载脚本写的
+   src/assets/polyhaven/manifest.json 转出）：
+     {
+       "hdri":   { "day-cloudy": {file, note}, ... },
+       "groups": {
+         "detail":   { note: "城中村/工业区标志细节", items: [
+             { name, file, note, w, h, d }, ...   // w/h/d 是模型实测米制尺寸
+         ]},
+         ...
+       }
+     }
+   ★ 为什么要带 w/h/d：验证脚本可以断言"卷帘门高 2.4m"，
+     而不是只断言"加载成功了" —— 后者对"模型尺寸错了 8 倍"毫无察觉。
+   ────────────────────────────────────────────────────────────────────────── */
+
+/** 列出某个 Poly Haven 组里的条目。 */
+export function polyHavenGroup(group) {
+  return (polyhavenManifest && polyhavenManifest.groups && polyhavenManifest.groups[group] && polyhavenManifest.groups[group].items) || [];
+}
+
+/** 按 as 名在整个 Poly Haven 清单里找一条（跨组搜索）。 */
+export function findPolyHaven(_group, name) {
+  const gs = (polyhavenManifest && polyhavenManifest.groups) || {};
+  for (const g of Object.keys(gs)) {
+    const hit = (gs[g].items || []).find((e) => e.name === name);
+    if (hit) return hit;
+  }
+  return null;
+}
+
+/** 列出全部 Poly Haven 模型条目（不分组的扁平视图）。 */
+export function listPolyHaven() {
+  const gs = (polyhavenManifest && polyhavenManifest.groups) || {};
+  const out = [];
+  for (const g of Object.keys(gs)) out.push(...(gs[g].items || []));
+  return out;
+}
+
+/** 列出 HDRI 清单（供环境光照用）。 */
+export function listHdri() {
+  const h = (polyhavenManifest && polyhavenManifest.hdri) || {};
+  return Object.keys(h).map((k) => ({ name: k, ...h[k] }));
+}
+
+/** HDRI 的 URL（未载入时不请求，只是拼路径）。 */
+export function hdriUrl(name) {
+  return `${ASSET_BASE}polyhaven/hdri/${name}.hdr`;
 }

@@ -26,8 +26,12 @@
   const host = document.getElementById('host');
   const g = S3.gamedata;
 
-  // dev 预览页从项目根提供服务，资产在 src/assets/kenney/
-  S3.setAssetBase('/src/assets/kenney/');
+  // dev 预览页从项目根提供服务，资产在 src/assets/ 下按源分子目录：
+  //   src/assets/kenney/<kit>/<name>.glb
+  //   src/assets/polyhaven/models/<as>/<x>.gltf
+  // ★ 这里传的是**资产根**（到 assets/ 为止），不是 kenney 根。
+  //   传错了会拼成 /src/assets/kenney/polyhaven/... → 静默 404 降级。
+  S3.setAssetBase('/src/assets/');
 
   /* —— 网络取证：自己包一层 fetch/XHR 太脆，直接读 performance 资源条目 ——
      浏览器会把所有成功与失败的资源请求记进 performance.getEntriesByType('resource')。
@@ -188,7 +192,7 @@
   (async () => {
     try {
       const loader = S3.createAssetLoader();
-      loader.setBase && loader.setBase('/src/assets/kenney/');
+      loader.setBase && loader.setBase('/src/assets/');
       const r = await loader.load('roads', '__definitely_missing_model__');
       window.__degradeOk = (r === null);
       window.__degradeDetail = r === null ? '返回 null（符合预期）' : '返回了 ' + typeof r;

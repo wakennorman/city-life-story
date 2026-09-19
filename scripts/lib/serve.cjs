@@ -28,6 +28,21 @@ const MIME = {
   ".ttf": "font/ttf",
   ".wasm": "application/wasm",
   ".webp": "image/webp",
+  /* ★ .glb 必须显式登记 MIME（2026-09-18）。
+     为什么这不是可有可无的一行：
+       不登记就落到下面的 `application/octet-stream` 兜底，
+       而 octet-stream 在浏览器/下载管理器眼里等于"未知二进制"——
+       IDM / 迅雷 / FDM 这类程序会据此**接管这个请求**，
+       响应在页面拿到之前就被吸走，GLTFLoader 于是报
+       "Failed to load buffer" 或干脆静默降级成兜底几何。
+       这正是用户看到的"一直在唤起 IDM"。
+       生产链路（build.py 产出的 dist）与这里必须是同一套 MIME，
+       否则会出现"本地测试好、真机坏"的错位假通过。
+     正确值取 glTF 规范：model/gltf-binary。 */
+  ".glb": "model/gltf-binary",
+  ".gltf": "model/gltf+json",
+  ".bin": "application/octet-stream",
+  ".hdr": "image/vnd.radiance",
 };
 
 /** 端口上是否已经有能返回 200 的 index.html */

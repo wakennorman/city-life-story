@@ -630,6 +630,44 @@ function propsFor(ctx, kind, rows) {
     }
   }
 
+  /* —— 通用：市政小件（Poly Haven CC0，米制）——
+     ★ 2026-09-18 新增。这三件解决的是同一个问题：
+       "街道两侧只有灯杆和垃圾桶，缺**市政基础设施**的那层细节"。
+       程序化几何擅长造体量，但造不出"这是市政管网/管线"的语义，
+       而这正是"城市"与"一堆方块"的分界。
+       三件都极矮（消防栓 0.8m / 落水管贴墙 / 卷帘窗 1.4m），
+       不抢视线高度，只负责近景的可信度。
+     ★ 为什么不撒满：消防栓在真实城市里 ~50m 一个，
+       撒满会变成"消防栓森林"，反而假。按人行道间隔取稀疏分布。 */
+  for (let z = -S / 2 + 10; z < S / 2 - 6; z += 22) {
+    for (const side of [-1, 1]) {
+      if (Math.abs(z - ctx.spawnZ) < 3) continue;
+      if (chance(0.45)) continue;
+      const h = K.hydrantProp();
+      ctx.place(h, side * (half - 1.3) + rnd(-0.3, 0.3), z + rnd(-2, 2), rnd(0, Math.PI * 2), {});
+    }
+  }
+
+  /* —— 通用：建筑外立面附属件（Poly Haven）——
+     给沿街建筑挂落水管与卷帘窗。
+     ★ 为什么挂在**建筑**而不是散在街上：这两件是"长在墙上"的构件，
+       离开墙就没有意义。故位置从 rows（沿街建筑行）反推，
+       与 shopUnit 用同一套坐标推导，保证贴墙不悬空。 */
+  rows.forEach((r) => {
+    const side = Math.sign(r.x) || 1;
+    const wallX = side * (Math.abs(r.x) - r.d / 2 - 0.12);
+    /* 落水管：沿墙一条竖管。MO 面几乎为零但视觉收益高。 */
+    if (chance(0.6)) {
+      const g = K.gutterProp();
+      ctx.place(g, wallX, r.z + (chance(0.5) ? -1 : 1) * (r.w / 2 - 0.6), side > 0 ? -Math.PI / 2 : Math.PI / 2, {});
+    }
+    /* 卷帘窗：铺面的侧窗。只有部分铺子拉下来（打烊感）。 */
+    if (chance(0.4)) {
+      const w = K.shutterWindowProp({ variant: 1 + Math.floor(rnd(0, 3)) });
+      ctx.place(w, wallX, r.z + rnd(-r.w / 3, r.w / 3), side > 0 ? -Math.PI / 2 : Math.PI / 2, {});
+    }
+  });
+
   if (kind === 'lane') {
     // 沿巷店铺门脸
     const names = SHOP_NAMES[spec.id] || SHOP_NAMES.default;
@@ -722,6 +760,34 @@ function propsFor(ctx, kind, rows) {
       ctx.place(K.utilityPole(), x, z, rnd(-0.2, 0.2), {});
     }
 
+    /* —— 城中村专属：外部资产（Poly Haven）——
+       这三件是**只有城中村才成立**的构筑物，放到 CBD/广场会失真，
+       所以写在这个分支里而不是通用段：
+         · 高压电线杆（10m，带横担绝缘子）—— 城中村的"盘丝"天际线由它撑起；
+           程序化那根纯圆杆没有横担，撑不起这个意象。
+         · 外挂消防梯（6.5m）—— 老宿舍楼/厂房的侧墙标志，
+           是"这栋楼很旧、是加建/改建过"的最强视觉线索。
+         · 铁丝网围栏 —— 城中村边缘的废地/工地边界，
+           真实且廉价地界定"这里不是给人走的"。 */
+    for (let i = 0; i < 3; i++) {
+      const [x, z] = sp(-half * 0.85, half * 0.85, -S / 2 + 8, S / 2 - 8, 7);
+      ctx.place(K.powerPoleProp(), x, z, rnd(-0.3, 0.3), {});
+    }
+    /* 消防梯贴建筑侧墙 —— 位置由 rows 反推，与 shopUnit 同侧。 */
+    rows.forEach((r) => {
+      if (chance(0.55)) return;
+      const side = Math.sign(r.x) || 1;
+      const fe = K.fireEscapeProp();
+      ctx.place(fe, side * (Math.abs(r.x) - r.d / 2 - 0.7), r.z + rnd(-r.w / 3, r.w / 3),
+        side > 0 ? -Math.PI / 2 : Math.PI / 2, {});
+    });
+    /* 铁丝网：沿场地边缘拉几段。 */
+    for (let i = 0; i < 4; i++) {
+      const t = -S / 2 + 8 + i * (S - 16) / 3;
+      const side = chance(0.5) ? -1 : 1;
+      ctx.place(K.chainlinkProp(), side * (half - 0.4), t + rnd(-2, 2), side > 0 ? -Math.PI / 2 : Math.PI / 2, {});
+    }
+
     /* —— 城中村：遮阳篷（GLB，商业 kit）——
        挂在店铺门脸那一侧，把"小卖部招牌"升级成"有生活气的铺子"。
        ★ 位置由 rows 反推，与 shopUnit 同侧同 z —— 否则篷子会飘在路中央。 */
@@ -779,6 +845,25 @@ function propsFor(ctx, kind, rows) {
     // 公交站
     const [bsx, bsz] = sp(-14, 14, -S / 2 + 8, S / 2 - 8, 6);
     ctx.place(K.busShelter(), bsx, bsz, chance(0.5) ? Math.PI : 0, {});
+
+    /* —— 大道专属：市政路障 + 拉下的卷帘门（Poly Haven）——
+       · 路障：给大道一个"某处正在封路施工"的叙事缺口。
+         撒 2 处成对出现（真实封路不会只放一个）。
+       · 卷帘门：大道商铺有 1/5 概率是**拉下来的**（非营业时段感），
+         位置贴着 shopUnit 的门洞，高度 2.4m 刚好盖住门脸下方。 */
+    for (let i = 0; i < 2; i++) {
+      const [x, z] = sp(-half + 3, half - 3, -S / 2 + 12, S / 2 - 12, 8);
+      const rot = chance(0.5) ? 0 : Math.PI / 2;
+      ctx.place(K.roadBarrierProp({ variant: 1 }), x, z, rot, {});
+      ctx.place(K.roadBarrierProp({ variant: 2 }), x + (rot === 0 ? 2.2 : 0), z + (rot === 0 ? 0 : 2.2), rot, {});
+    }
+    rows.forEach((r) => {
+      if (chance(0.78)) return;
+      const side = Math.sign(r.x) || 1;
+      const d = K.shutterDoorProp();
+      ctx.place(d, side * (Math.abs(r.x) - r.d / 2 - 0.2), r.z + rnd(-r.w / 3, r.w / 3),
+        side > 0 ? -Math.PI / 2 : Math.PI / 2, {});
+    });
     return;
   }
 
