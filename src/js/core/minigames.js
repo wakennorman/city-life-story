@@ -597,7 +597,12 @@
     /* 先收 ¥5 入场费 */
     state.resources.cash = Math.max(0, (state.resources.cash || 0) - COST);
 
-    var g = chessInit((state.player.day || 0) + wonToday * 7 + Math.floor(Math.random() * 3));
+    /* ★ 必须走 Random.int，不能用裸 Math.random()：
+       棋局由 (天数 + 今日胜场×7 + 随机数) 播种，同一存档重放应得到同一局。
+       裸 Math.random() 绕过种子 → 复现性断裂，且会被 `npm run test:unit`
+       的 rngHygiene 判为真违规（该用例挂了会让 quality-gate 整体失败，
+       进而**挡掉线上部署** —— 2026-09-19 实测线上旧版就是被它卡住的）。 */
+    var g = chessInit((state.player.day || 0) + wonToday * 7 + Random.int(0, 2));
     var sel = null;
     var over = false;
 
