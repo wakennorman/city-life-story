@@ -44,6 +44,9 @@
   var overlayEl = null;
   var lastLocId = null;
   var overlayOpen = false;
+  /* 3D 挂载期间被"让位"隐藏的界面：{el, prev} 数组（见 mountFirst）。
+     记原值是为了卸载时逐个还原 —— 不能统一置 "". */
+  var yieldEls = [];
 
   function core() {
     return window.Scene3D || null;
@@ -551,21 +554,44 @@
     if (typeof S3.create3DShell !== "function") return null;
     if (!getState()) return null;   // 逻辑层还没 newGame/loadGame
 
-    /* 让位：**只接管当前可见的 #app**。
-       若它本来就是隐藏的（欢迎页 / 开场世界新闻还没走完），就别碰它。
-       ★ 为什么：`appPrevDisplay` 记的是"挂载那一刻的值"，卸载时原样写回。
-         如果那一刻恰好是 "none"（实测会发生 —— startNewGame() 里的
-         `#app.style.display = ""` 是在 startWithWorldNewsIntro 的回调
-         `_enterClassicGame` 里做的，函数返回时它仍是 none），
-         那么"原样恢复"就等于把一个本该隐藏的界面留在 none 上，
-         看起来像卸载失败。让位不是"让隐藏的东西变可见"。 */
-    appEl = document.getElementById("app");
-    if (appEl && appEl.style.display !== "none") {
-      appPrevDisplay = appEl.style.display || "";
-      appEl.style.display = "none";
-    } else {
-      appEl = null;
+    /* ── 让位：把「开始游戏之前」的那一整套界面收起来 ──────────────────────
+     *
+     * 要收的不只是 `#app`，而是 **5 个 body 级界面**：
+     *   #app  #welcome-screen  #mode-select-screen
+     *   #scenario-select-screen  #sandbox-screen
+     *
+     * ★ 2026-09-19 修「3D 模式下按 Tab，焦点跑到原网页」。
+     *   真凶是后面那 4 张**欢迎屏**：它们是 body 的直接子元素，
+     *   **不在 `#app` 内部**，所以 `#app` 的 display:none 完全管不到。
+     *   实测 3D 模式下它们仍然可见，里面 20+ 个按钮
+     *   （「开始新游戏」「传承商店」「帮助」…）全都留在 tab 顺序里。
+     *   玩家按 Tab，焦点就在这些**看不见的**按钮上游走 ——
+     *   "快捷键一半不灵"就是这么来的。
+     *
+     * 为什么每项都记 `prev` 而不是统一置 none：
+     *   卸载时要还原成**各自原本的样子**（有的原本就是 none）。
+     *   一次性覆盖能省几行，代价是 F3 切回 2D 后界面错乱。
+     *
+     * 为什么还要设 `inert`：
+     *   光隐藏不够 —— 2D 逻辑随时可能把这些屏**重新显示**出来
+     *   （readHUD 那条 onChange 链上就有）。`inert` 保证在 3D 活着期间
+     *   它们永远不参与交互与聚焦，即使被谁显示了。 */
+    yieldEls = [];
+    var YIELD_IDS = ["app", "welcome-screen", "mode-select-screen", "scenario-select-screen", "sandbox-screen"];
+    for (var yi = 0; yi < YIELD_IDS.length; yi++) {
+      var el = document.getElementById(YIELD_IDS[yi]);
+      if (!el) continue;
+      yieldEls.push({ el: el, prev: el.style.display || "" });
+      el.style.display = "none";
+      try { el.inert = true; } catch (e) { /* 老浏览器会忽略 inert */ }
     }
+
+    /* 兼容 unmountFirst 里的旧引用（它按 appEl / appPrevDisplay 还原） */
+    appEl = null; appPrevDisplay = "";
+    for (var yk = 0; yk < yieldEls.length; yk++) {
+      if (yieldEls[yk].el.id === "app") { appEl = yieldEls[yk].el; appPrevDisplay = yieldEls[yk].prev; break; }
+    }
+
 
     firstHost = document.createElement("div");
     firstHost.id = FIRST_ID;
@@ -598,15 +624,29 @@
 
     ensureChangeHook();
 
-    /* 一次性提示：玩家得知道怎么回去 */
-    firstShell.notify("3D 模式 · 按 F3 返回原界面", "ok");
+    /* 提示文案随「默认 / 强制」变化：
+       默认进 3D 时，玩家没做任何选择就"界面变了"，更需要一句明确的返回指引。
+       而用 ?mode=3d 强制进来的人，本来就知道自己在做什么。 */
+    firstShell.notify(wants2D() ? "2D 模式" : "3D 模式 · 按 F3 切换界面", "ok");
     return firstShell;
   }
 
   function unmountFirst() {
     if (firstShell) { firstShell.dispose(); firstShell = null; }
     if (firstHost) { firstHost.remove(); firstHost = null; }
-    if (appEl) { appEl.style.display = appPrevDisplay; appEl = null; }
+
+    /* 还原让位的那 5 个界面：**逐个恢复各自的原值**，并解除 inert。
+       顺序无所谓，但必须全部走到 —— 漏掉任何一个，
+       F3 切回 2D 后就会有一块界面"看起来是空的"（其实是 display:none）。*/
+    for (var i = 0; i < yieldEls.length; i++) {
+      var rec = yieldEls[i];
+      if (!rec || !rec.el) continue;
+      rec.el.style.display = rec.prev;
+      try { rec.el.inert = false; } catch (e) { /* 老浏览器忽略 */ }
+    }
+    yieldEls = [];
+
+    appEl = null;
     appPrevDisplay = "";
     lastMsgLen = -1;
     pending = false;
@@ -617,12 +657,53 @@
     return !!mountFirst();
   }
 
-  /** 是否被显式要求进 3D（默认行为不带参数时一个字都不改） */
+  /**
+   * 是否进 3D-first 形态。
+   *
+   * ★ 2026-09-19 改为 **3D 成为默认形态**（恒稳拍板）。
+   *
+   * 旧行为是「默认 2D，必须显式要求才进 3D」：要手打 `?mode=3d`，
+   * 或用 `#3d`。实测的后果是——**玩家根本不知道有这个模式**。
+   * 恒稳打开 `/d` 看到的仍是 2D 界面 + 侧栏缩略图，于是问
+   * "为什么还有原来的网页界面""是不是还没转成 3D 游戏"。
+   * 一个要手打 URL 才能进的主形态，等于没有。
+   *
+   * 新行为（三条，顺序即优先级）：
+   *   1. `?mode=2d` / `#2d` / `#2d-first`  → **强制 2D**（逃生口，见下）
+   *   2. `?mode=3d` / `#3d` / `#3d-first` → 强制 3D（保留，老链接不失效）
+   *   3. 什么都不带                        → **默认 3D**
+   *
+   * 为什么必须留 `?mode=2d` 这个逃生口：
+   *   2D 界面里有一批功能 3D 层还没接手（商店/工作/事件弹窗等仍是 2D DOM）。
+   *   而且 3D 层依赖 WebGL —— 老旧机器/禁用 WebGL 的浏览器上，
+   *   若没有一条"回到能用的界面"的路，游戏会直接变砖。
+   *   `available()` 那条守卫只能挡住"3D 代码没加载"，
+   *   挡不住"加载了但 WebGL 上下文创建失败"。所以逃生口必须是 URL 级的，
+   *   不依赖任何 JS 成功执行。
+   *
+   * @returns {boolean}
+   */
   function wantsFirst() {
     if (typeof window === "undefined" || !window.location) return false;
     var q = window.location.search || "";
     var h = window.location.hash || "";
-    return /[?&]mode=3d(&|$)/.test(q) || h === "#3d" || h === "#3d-first";
+
+    /* 1. 显式强制 2D —— 逃生口，优先级最高 */
+    if (/[?&]mode=2d(&|$)/.test(q) || h === "#2d" || h === "#2d-first") return false;
+
+    /* 2. 显式强制 3D —— 保留旧链接的语义 */
+    if (/[?&]mode=3d(&|$)/.test(q) || h === "#3d" || h === "#3d-first") return true;
+
+    /* 3. 默认 3D */
+    return true;
+  }
+
+  /** 是否被显式要求回到 2D（供 UI 提示文案区分"默认"与"强制"） */
+  function wants2D() {
+    if (typeof window === "undefined" || !window.location) return false;
+    var q = window.location.search || "";
+    var h = window.location.hash || "";
+    return /[?&]mode=2d(&|$)/.test(q) || h === "#2d" || h === "#2d-first";
   }
 
   /**
@@ -695,10 +776,55 @@
     setTimeout(pollForState, pollTicks < 50 ? 100 : 1000);
   }
 
-  /** 启动开关：只在显式要求时进 3D。默认行为（不带参数）一个字都不改。 */
+  /**
+   * WebGL 上下文能不能建起来。
+   *
+   * ★ 为什么必须单独探一次，而不是等 create3DShell 抛异常：
+   *   Three.js 在拿不到 WebGL 上下文时的表现**不统一** —— 有的版本抛
+   *   "Error creating WebGL context"，有的只是往 console 打一行 error 然后
+   *   渲染出一个**全黑但结构完整**的 canvas。后者不会中断我们的挂载流程，
+   *   于是玩家看到的是"黑屏 + HUD"，而不是"回到 2D"。
+   *   探针的代价是创建又销毁一个上下文（~毫秒级），换来的是
+   *   一个**确定的**降级决策点。
+   * @returns {boolean}
+   */
+  function webglUsable() {
+    if (typeof document === "undefined" || typeof document.createElement !== "function") return false;
+    try {
+      var c = document.createElement("canvas");
+      var gl = c.getContext("webgl2") || c.getContext("webgl") || c.getContext("experimental-webgl");
+      if (!gl) return false;
+      /* 主动释放，别占着一个上下文（浏览器有 ~16 个的上限） */
+      var lose = gl.getExtension("WEBGL_lose_context");
+      if (lose) lose.loseContext();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /**
+   * 启动开关：默认进 3D（除非 URL 显式要求 2D，或 WebGL 不可用）。
+   *
+   * ★ 三处守卫的顺序是有意的：
+   *   1. `available()` —— 3D 代码本身加载了没（bundle 缺失时什么都不做）
+   *   2. `wantsFirst()` —— 玩家/URL 的意愿（默认 true，`?mode=2d` 为 false）
+   *   3. `webglUsable()` —— **环境能力**。这一条是 2026-09-19 补的：
+   *      前两条都通过、但 WebGL 建不起来时，旧代码会挂上一个黑屏 canvas，
+   *      比"没进 3D"更糟 —— 玩家看不出是环境不支持，只当游戏坏了。
+   *      降级到 2D 并在 console 说明原因，是唯一体面的处理。
+   */
   function autoStartFirst() {
     if (!available()) return;
     if (!wantsFirst()) return;
+    if (!webglUsable()) {
+      /* 不弹 alert（会打断开场流程）。留一行可检索的日志，
+         并把决定权交回 2D —— 2D 界面本来就是完整的。 */
+      try {
+        console.warn("[Scene3D] WebGL 不可用，已降级到 2D 界面。加 ?mode=3d 可强制重试。");
+      } catch (e) { /* ignore */ }
+      return;
+    }
     autoStartPending = true;
     ensureChangeHook();   // 玩家「开始新游戏 / 读档」那一刻必然触发 update → notify
     pollForState();       // 兜底：onChange 若不可用（StateManager 尚未挂载等）

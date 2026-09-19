@@ -23,6 +23,7 @@
     "verify:3d-geometry": "node scripts/verify-3d-hud-geometry.cjs",
     "verify:3d-live": "node scripts/verify-3d-live.cjs",
     "verify:3d-assets": "node scripts/verify-3d-assets.cjs",
+    "verify:3d-default": "node scripts/verify-3d-default.cjs",
     "shot:3d-assets": "node scripts/shot-3d-assets.cjs",
     "build:legacy": "python build.py",
     "deploy": "npm run build:legacy && npm run verify:deploy && netlify deploy --dir=dist --prod",

@@ -140,13 +140,82 @@ export function create3DShell(opts = {}) {
     return null;
   }
 
-  /* ── 键盘 ───────────────────────────────────────────────────────────── */
+  /* ── 键盘 ─────────────────────────────────────────────────────────────
+   *
+   * ★ 2026-09-19 修「Tab 键一半的响应跑到别处」。
+   *
+   * 症状：3D 模式下按 Tab，行动托盘**有时**展开、有时不展开，
+   *       而且原 2D 界面里会有元素被聚焦（虽然它已 display:none）。
+   *
+   * 两个原因叠在一起：
+   *   1. 监听挂在**冒泡阶段**（默认）。Tab 是浏览器内建行为，
+   *      在冒泡到达我们之前，焦点已经开始移动了。虽然 preventDefault
+   *      能取消默认行为，但若链路上有别的监听先 stopPropagation，
+   *      我们就永远收不到这个事件 —— 表现就是"有时不好使"。
+   *   2. 没 stopPropagation，事件继续上传给 2D 层与宿主页面。
+   *
+   * 解法：捕获阶段（第三个参数 true）+ stopPropagation。
+   *   捕获是从 window 往下走，我们是最外层容器，**一定**是最先拿到的那个。
+   *   拿到就吃掉，后面的默认行为与其它监听都不会再看到它。
+   *
+   * 另外补 Escape 关闭已展开的面板 —— 这是全屏界面的通用期待，
+   * 原先只能"再按一次 Tab"或点关闭按钮。
+   *
+   * ★ 关于 Space：**外壳不处理 Space**。
+   *   上一轮口头说"Space 切换时段"是错的，代码里从来没有过。
+   *   这里明确写下来，免得下次又有人（包括我）凭印象当成已有功能。
+   *   时段由游戏状态驱动（readHUD 的 slot），不需要手动切换键。
+   *   但 full 模式里 Space 会被 preventDefault 以防页面滚动 —— 见 index.js。 */
   function onKey(e) {
     const t = e.target;
-    if (t && t.tagName && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
-    if (e.code === "Tab") { e.preventDefault(); hud.toggleTray(); }
-    else if (e.code === "KeyM") { e.preventDefault(); hud.toggleMap(); }
-    else if (e.code === "KeyR") { core().resetView(); }
+    const typing = !!(t && t.tagName && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) || (t && t.isContentEditable);
+
+    /* ★ 输入态下的例外清单 —— 2026-09-19 修「打开去处列表后 Escape 失效」。
+     *
+     * 原实现是「只要焦点在输入框，一律 return」。这条守卫本身没错
+     * （否则在搜索框里打字会触发一堆快捷键），但它顺手把 Escape 也挡掉了：
+     *   M 打开去处列表 → toggleMap 会 f.mapSearch.focus()
+     *   → 焦点落在搜索框 → 之后按 Escape 想在"关闭面板"时，
+     *   事件被这条守卫直接吞掉，面板关不掉。
+     * 实测现象就是"地图开了之后 Escape 没反应"，而 Tab/M 在**开地图之前**
+     * 测是好的 —— 典型的「顺序相关的假象」。
+     *
+     * 输入态下仍应生效的两个键：
+     *   Escape —— 清空搜索框并收起面板是通用期待，绝不能挡。
+     *   全局呼出键（Tab/M）—— 在输入框里也应当能切面板。
+     * 其余（R 回正等）在打字时应让路，避免误触。
+     */
+    const globalKeys = e.code === "Escape" || e.code === "Tab" || e.code === "KeyM";
+    if (typing && !globalKeys) return;
+
+    if (e.code === "Tab") {
+      e.preventDefault();
+      e.stopPropagation();
+      hud.toggleTray();
+    } else if (e.code === "KeyM") {
+      e.preventDefault();
+      e.stopPropagation();
+      hud.toggleMap();
+    } else if (e.code === "Escape") {
+      /* Escape 只负责"收起"，不负责"展开" —— 且不抢默认，
+         让浏览器的其它 Escape 行为（退出全屏等）仍能工作。
+         优先级：地图 > 托盘（地图是更"上层"的面板）。
+         收起地图时顺带把焦点从搜索框移走，否则下一次按键
+         仍然落在输入框里（虽然现在有 globalKeys 例外兜着，
+         但让焦点回到 3D 舞台才是干净的状态）。 */
+      if (hud.mapOpen) {
+        e.preventDefault();
+        const search = document.querySelector("#scene3d-first .s3h-map-search");
+        if (search && document.activeElement === search) search.blur();
+        hud.toggleMap(false);
+      } else if (hud.trayOpen) {
+        e.preventDefault();
+        hud.toggleTray(false);
+      }
+    } else if (e.code === "KeyR") {
+      e.stopPropagation();
+      core().resetView();
+    }
   }
 
   return {
@@ -159,7 +228,11 @@ export function create3DShell(opts = {}) {
       const v = core();
       v.start();
       if (readLocations) hud.setLocations(readLocations() || [], travel);
-      window.addEventListener("keydown", onKey);
+      /* ★ 捕获阶段（true）—— 见 onKey 顶注：必须抢在浏览器内建的 Tab
+         焦点移动、以及 2D 层/宿主的任何监听之前拿到事件。
+         冒泡阶段拿不到的情形是真实存在的（链路上有人 stopPropagation），
+         表现就是"快捷键有时灵有时不灵"，最难查的一类 bug。 */
+      window.addEventListener("keydown", onKey, true);
       window.addEventListener("resize", () => v.resize());
       refresh();
       return this;
@@ -167,7 +240,7 @@ export function create3DShell(opts = {}) {
 
     stop() {
       running = false;
-      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keydown", onKey, true);
       view?.stop();
     },
 

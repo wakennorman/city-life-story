@@ -353,6 +353,12 @@ export function createHUD(opts = {}) {
 
     get mapOpen() { return mapOpen; },
 
+    /* trayOpen 与 mapOpen 对称暴露。
+       用途：Escape 需要知道"当前有哪个面板是展开的"才能决定收哪一个
+       （shell.js::onKey）。没有这个 getter 时，Escape 只能盲收 ——
+       会出现在"托盘没开"时也调一次 toggleTray(false) 的空操作。 */
+    get trayOpen() { return trayOpen; },
+
     /** 反馈条。kind: ok | warn | bad */
     notify(msg, kind = "ok") {
       const el = document.createElement("div");
