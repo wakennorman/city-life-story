@@ -400,6 +400,24 @@
     setGlobal("window", globalThis);
     setGlobal("self", globalThis);
     setGlobal("document", doc);
+
+    // window.addEventListener / removeEventListener
+    //
+    // 沙箱里 `window = globalThis`，但此前**只给 document 配了 addEventListener**，
+    // window 上没有 —— 这是浏览器语义的缺口：真实浏览器里 window 同样有这两个方法。
+    // 症状：新加入的 `js/ui/npc_roster.js` 在加载期（document 已 ready）直接
+    // 调 `window.addEventListener("keydown", …)` 注册快捷键，无头环境即抛
+    // `window.addEventListener is not a function`，把 events_integrity /
+    // smoke_sim / monte_carlo 整条链**全部挡在加载阶段**。
+    //
+    // 修在沙箱侧而不是给每个 UI 文件加 typeof 守卫：这是环境保真度问题，
+    // 浏览器里合法的事情不该被无头环境禁止。补上后与 document 的写法对称。
+    if (typeof globalThis.addEventListener !== "function") {
+      globalThis.addEventListener = function () {};
+    }
+    if (typeof globalThis.removeEventListener !== "function") {
+      globalThis.removeEventListener = function () {};
+    }
     setGlobal("localStorage", ls);
     setGlobal("sessionStorage", createLocalStorage());
     setGlobal("navigator", {

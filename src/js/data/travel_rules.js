@@ -73,8 +73,14 @@ const TRANSIT_MODES = {
     label: "🚶 步行",
     icon: "🚶",
     desc: "免费",
-    hint: "💡 步行到达，按距离消耗6~26AP，免费",
-    apBase: null, // 随跳数变化
+    hint: "💡 步行到达，按距离消耗12~26AP（技能/三轮回车可减免），免费",
+    // ★ 2026-09-19：AP 不再自算，改**向逻辑层权威实现 getTravelApCost 借用**。
+    //   原先这里写 `max(6, 6+hops*4)`，与逻辑层 `12+(hops-1)*4` 是**两套口径**：
+    //   同为 1 跳，地图点击算 10AP、行动列表「前往X」算 12AP，文案都写"步行"。
+    //   出行方式可以多套，但"步行耗多少行动力"只能有一个答案 —— 故此处
+    //   委托 getTravelApCost（它已含跳数/贫富跨区/驾驶技能/三轮回车/天气等修正）。
+    atMode: "logic",
+    apBase: null,
     apMin: 6,
     apPerHop: 4,
     price: 0,
@@ -198,6 +204,16 @@ function resolveTransit(mode, fromKey, toKey, state) {
     return fail("你还没有车，无法自驾出行。可以去汽车城看看。");
   }
 
+  // ── 路网不可达：任何出行方式都去不了 ──
+  // ★ 2026-09-19 补：原先只有「单车」分支拦了 99 哨兵，
+  //   步行 / 打车 / 自驾在不可达地点上会**静默算出天文数字** ——
+  //   步行 `6 + 99*4 = 402 AP`、打车照收 ¥10-40。玩家看到的是
+  //   "走得过去（402 行动力）"，而不是"这个地方去不了"。
+  //   不可达与"能去但贵"是两回事，必须在**方式无关**的层面统一拦掉。
+  if (hops >= UNREACHABLE) {
+    return fail("这个地方去不了");
+  }
+
   // ── 地铁：仅沿线站点 ──
   if (def.metroOnly && METRO_STATIONS.indexOf(toKey) < 0) {
     return fail("不在地铁沿线，请选择其他出行方式。");
@@ -213,12 +229,33 @@ function resolveTransit(mode, fromKey, toKey, state) {
   }
 
   // ── AP 计算 ──
-  let ap;
-  if (def.apBase !== null && def.apBase !== undefined) {
-    ap = def.apBase;
-  } else {
-    // 步行：随跳数线性增长，但有下限
-    ap = Math.max(def.apMin || 6, (def.apMin || 6) + hops * (def.apPerHop || 4));
+  //
+  // 步行（`atMode:"logic"`）的 AP **不自算**，而是委托逻辑层权威实现
+  // `getTravelApCost` —— 原先这里写 `max(6, 6+hops*4)`，与逻辑层
+  // `12+(hops-1)*4` 是两套口径：同为 1 跳，地图点击算 10AP、
+  // 行动列表「前往X」算 12AP，文案都写"步行"。出行方式可以多套，
+  // 但"步行耗多少行动力"只能有一个答案。
+  //
+  // ⚠️ 降级不抛：getTravelApCost 内部会调 getWeatherTravelApMod(state)，
+  //    后者 `if (!state.weather)` 在 state 为 null 时**会抛 TypeError**。
+  //    resolveTransit 可能在 state 未就绪时被渲染期调用，此处必须兜住 ——
+  //    否则"出行判据"会把整个地图 Tab 炸掉（比算错 AP 严重得多）。
+  let ap = 0;
+  if (def.atMode === "logic" && typeof getTravelApCost === "function" && state) {
+    try {
+      ap = getTravelApCost(fromKey, toKey, state);
+    } catch (e) {
+      ap = 0;
+    }
+  }
+  // getTravelApCost 对不可达返回的正是 99（与 hops 哨兵同值，>0 会被误当合法成本）
+  if (ap === UNREACHABLE) return fail("这个地方去不了");
+  if (!(ap > 0)) {
+    // 退化兜底：权威实现缺失 / state 未就绪 / 抛错时走到这里
+    ap =
+      def.apBase !== null && def.apBase !== undefined
+        ? def.apBase
+        : Math.max(def.apMin || 6, (def.apMin || 6) + hops * (def.apPerHop || 4));
   }
 
   // ── 价格计算 ──

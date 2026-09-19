@@ -68,6 +68,28 @@ function loadTravelRules() {
   return sandbox.window;
 }
 
+/**
+ * 在**真实** locations.js 上加载 travel_rules.js。
+ *
+ * 存在理由：B 组用的打桩 getLocationHops 只能验证"分歧分支"，**验证不了
+ * 「步行 AP 与逻辑层是否一致」** —— 那个断言若也打桩，就退化成自证。
+ * 这里加载真文件，才能把 `resolveTransit("walk")` 与
+ * `getTravelApCost()` 放在同一张真实地名表上对比（见 E 组）。
+ *
+ * locations.js 用**裸函数声明**经 script 标签共享全局，不挂 window，
+ * 故把 window 指回 sandbox 自身，使 `typeof window!=="undefined"` 成立。
+ */
+function loadReal() {
+  const locSrc = fs.readFileSync(LOCATIONS_JS, "utf8");
+  const trvSrc = fs.readFileSync(TRAVEL_JS, "utf8");
+  const sandbox = { console, Math, JSON, Random: { int: (a, b) => Math.floor((a + b) / 2) } };
+  sandbox.window = sandbox;
+  vm.createContext(sandbox);
+  vm.runInContext(locSrc, sandbox, { filename: "locations.js" });
+  vm.runInContext(trvSrc, sandbox, { filename: "travel_rules.js" });
+  return sandbox;
+}
+
 console.log("════ 出行方式规则门禁 ════\n");
 
 const G = loadTravelRules();
@@ -345,6 +367,154 @@ ok(
 // D6 render.js 确实用上了下沉函数
 ok("D6 render.js 调用了 resolveTransit", renderSrc.indexOf("resolveTransit(") >= 0);
 ok("D7 render.js 调用了 payTransitFee", renderSrc.indexOf("payTransitFee(") >= 0);
+
+/* ─────────── E. 步行 AP 口径一致 + 不可达统一拦截 ───────────
+ *
+ * 这一组守的是**第二轮**才被发现的缺陷（首轮门禁 38 绿时它还在）：
+ *   E1/E2 同一个「步行去某地」，2D 地图点击与行动列表「前往X」算出**两个 AP**：
+ *        地图走 resolveTransit（原 `max(6, 6+hops*4)`）→ 1 跳 = 10；
+ *        行动列表走 getTravelApCost（`12+(hops-1)*4`）→ 1 跳 = 12。
+ *        文案都写"步行"，玩家换条路走同样的路，行动力却不一样。
+ *   E3    不可达地点（hops=99 哨兵）只有「单车」分支拦了，
+ *        步行会静默算出 `6+99*4 = 402 AP`、打车照收 ¥10-40。
+ *
+ * ★ 本组**必须用真实 locations.js**（loadReal）—— 用打桩 getLocationHops 的话
+ *   一致性断言就成了"自己跟自己对"，是自证式门禁。真实地名表才作数。
+ * ★ 每条配反向对照：把口径改回旧公式，E2 必须变红（见 E2b 注入验证）。
+ */
+console.log("\nE. 步行 AP 口径一致 + 不可达统一拦截");
+
+const R = loadReal();
+const mkRealState = (claims) => ({
+  skills: { driving: { level: 0 } },
+  flags: claims ? claims : {},
+});
+
+// 取一对真实存在、且 1 跳的地点（用 getTravelApCost 实测，不硬编码）
+const REAL_FROM = "commercialDist";
+const REAL_TO = "bank";
+const realHops = R.getLocationHops(REAL_FROM, REAL_TO);
+const authoritativeAp = R.getTravelApCost(REAL_FROM, REAL_TO, mkRealState(false));
+
+ok(
+  "E0 真实地名表已加载（hops 有限且 < 99）",
+  realHops > 0 && realHops < 99,
+  REAL_FROM + "→" + REAL_TO + " hops=" + realHops,
+);
+
+// E1 步行 AP 必须等于逻辑层权威值
+const walkReal = R.resolveTransit("walk", REAL_FROM, REAL_TO, mkRealState(false));
+ok(
+  "E1 步行 AP 与逻辑层权威值一致",
+  walkReal.ok === true && walkReal.ap === authoritativeAp,
+  "resolveTransit=" + walkReal.ap + " / getTravelApCost=" + authoritativeAp,
+);
+
+// E2 口径一致性要**跨多个真实地点对**成立（单点巧合不算）
+const REAL_PAIRS = [
+  ["commercialDist", "bank"],
+  ["slum", "commercialDist"],
+  ["commercialDist", "suburb"],
+  ["slum", "school"],
+  ["commercialDist", "hospital"],
+];
+const mismatches = [];
+for (const [a, b] of REAL_PAIRS) {
+  const st = mkRealState(false);
+  const r = R.resolveTransit("walk", a, b, st);
+  const auth = R.getTravelApCost(a, b, st);
+  if (!r.ok || r.ap !== auth) mismatches.push(`${a}→${b}: ${r.ok ? r.ap : "拦"} vs ${auth}`);
+}
+ok(
+  "E2 多地点对步行 AP 全部一致",
+  mismatches.length === 0,
+  mismatches.length ? "★ 分叉：" + mismatches.join(" | ") : REAL_PAIRS.length + " 对全一致",
+);
+
+// E2b 反向对照：把 walk 改回旧公式，一致性必须被打破（证明 E1/E2 不是恒绿）
+{
+  const src = fs.readFileSync(TRAVEL_JS, "utf8");
+  const mutated = src.replace(
+    /atMode:\s*"logic"/,
+    'atMode: "none", apBase: null', // 摘掉委托 → 退回 max(6, 6+hops*4)
+  );
+  const sb = { console, Math, JSON, Random: { int: (a, b) => Math.floor((a + b) / 2) } };
+  sb.window = sb;
+  vm.createContext(sb);
+  vm.runInContext(fs.readFileSync(LOCATIONS_JS, "utf8"), sb, { filename: "locations.js" });
+  vm.runInContext(mutated, sb, { filename: "travel_rules.mutated.js" });
+  const mw = sb.resolveTransit("walk", REAL_FROM, REAL_TO, mkRealState(false));
+  const oldFormulaBreak = mw.ap !== authoritativeAp;
+  ok(
+    "E2b 反向对照：退回旧公式后一致性必被打破",
+    oldFormulaBreak,
+    "注入版 AP=" + mw.ap + "（权威=" + authoritativeAp + "）→ " + (oldFormulaBreak ? "已分叉" : "★ 假绿"),
+  );
+}
+
+// E3 不可达地点：**每种**出行方式都必须被拦（原先只有单车拦）
+{
+  // 造一个真实地名表里不存在的孤立点不现实，改用打桩沙箱验证 99 哨兵
+  const G2 = loadTravelRules();
+  const unreachable = ["walk", "bike", "metro", "taxi", "car"];
+  const leaked = [];
+  for (const m of unreachable) {
+    // farAway 打桩为 99；car 需要车，给辆车避免被车辆门槛提前拦掉（那样就测不到 99 分支）
+    const r = G2.resolveTransit(m, "commercialDist", "farAway", {
+      investment: { cars: [{}] },
+      resources: { cash: 1000 },
+    });
+    if (r.ok || r.ap >= 99 || r.ap === 99) leaked.push(m + "(ok=" + r.ok + ",ap=" + r.ap + ")");
+  }
+  ok(
+    "E3 不可达地点对所有出行方式统一拦截",
+    leaked.length === 0,
+    leaked.length ? "★ 漏拦：" + leaked.join(", ") : unreachable.length + " 种方式全拦下",
+  );
+}
+
+// E4 反向对照：把 99 统一拦截拆掉，walk 必须立刻漏出天文数字 AP
+{
+  const src = fs.readFileSync(TRAVEL_JS, "utf8");
+  // 只移除「方式无关」的统一拦截块，保留单车分支自己的 99 判断
+  const mutated = src.replace(
+    /\n  \/\/ ── 路网不可达：任何出行方式都去不了 ──[\s\S]*?\n  \}\n/,
+    "\n",
+  );
+  const sb = { console, Math, JSON, getLocationHops: (f, t) => (t === "farAway" ? 99 : 2), addDailyTransaction: null, Random: { int: (a, b) => Math.floor((a + b) / 2) } };
+  sb.window = sb;
+  vm.createContext(sb);
+  vm.runInContext(mutated, sb, { filename: "travel_rules.mutated2.js" });
+  const mw = sb.resolveTransit("walk", "commercialDist", "farAway", {
+    investment: { cars: [] },
+    resources: { cash: 1000 },
+  });
+  const leaked = mw.ok === true && mw.ap >= 99;
+  ok(
+    "E4 反向对照：拆掉统一拦截后步行漏出天文 AP",
+    leaked,
+    "注入版 walk→farAway ok=" + mw.ok + " ap=" + mw.ap + " → " + (leaked ? "已漏（证明 E3 有效）" : "★ 未复现，E3 可能恒绿"),
+  );
+}
+
+// E5 state 未就绪时不得抛异常。
+//   resolveTransit 现委托 getTravelApCost，后者内部 getWeatherTravelApMod(state)
+//   对 state=null 会抛 TypeError。渲染期若 state 尚未就绪，异常会炸掉整个地图 Tab。
+//   这是"降级不抛"铁律在出行链路上的落点，必须被守住。
+{
+  let threw = false;
+  let ret = null;
+  try {
+    ret = R.resolveTransit("walk", REAL_FROM, REAL_TO, null);
+  } catch (e) {
+    threw = true;
+  }
+  ok(
+    "E5 state 未就绪时不抛（降级为兜底 AP）",
+    !threw && ret && typeof ret.ok === "boolean",
+    threw ? "★ 抛异常，会炸掉地图 Tab" : "ok=" + ret.ok + " ap=" + ret.ap,
+  );
+}
 
 /* ─────────── 汇总 ─────────── */
 console.log("\n════ 结果: " + PASS + " 通过 / " + FAIL + " 失败 ════");
