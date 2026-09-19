@@ -46,6 +46,10 @@ import kenneyManifest from './kenney-manifest.json';
 /* Poly Haven 清单：由 scripts/gen-polyhaven-manifest.cjs 生成，
    数据来自 src/assets/polyhaven/manifest.json（下载脚本写的，含 md5 与来源 URL）。 */
 import polyhavenManifest from './polyhaven-manifest.json';
+/* AI 生成资产清单：由 scripts/ai-asset-pipeline.cjs 在每次产出后重写。
+   尺寸是**预处理烘焙后**的米制实测值 —— 用于验证脚本断言"高度 = 目标值"，
+   而不是只断言"加载成功了"（后者对"尺寸错了 10 倍"毫无察觉）。 */
+import aiManifest from './ai-manifest.json';
 
 /** 资产根路径。相对 app.js（位于 dist/ 根），与 dist/assets/ 对应。
  *
@@ -99,19 +103,45 @@ export const KITS = ['commercial', 'industrial', 'roads'];
    ────────────────────────────────────────────────────────────────────────── */
 
 /** 源标识常量 */
-export const SRC = { KENNEY: 'kenney', POLYHAVEN: 'polyhaven' };
+export const SRC = { KENNEY: 'kenney', POLYHAVEN: 'polyhaven', AI: 'ai' };
 
 /** 各源的根路径（相对 app.js / 项目根；由 setAssetBase 注入绝对前缀） */
 const SRC_PATH = {
   [SRC.KENNEY]: 'kenney',
   [SRC.POLYHAVEN]: 'polyhaven/models',
+  [SRC.AI]: 'ai',
 };
 
 /** 各源的默认缩放（模型单位 → 米） */
 const SRC_SCALE = {
   [SRC.KENNEY]: 8,     // 见下方 M_PER_UNIT 的长注释
   [SRC.POLYHAVEN]: 1,  // 米制，不换算
+  /* ★ AI 源也是 1 —— 但**不是因为它天生是米制**，而是因为我们在上游烘焙过了。
+     （2026-09-19 新增。这是本项目"差 N 倍且不报错"坑的第三例，务必读完。）
+
+     混元 3D 直出的模型**不是任何物理单位**：它把包围球归一化到 ≈1.22，
+     跟真实尺寸无关。所以"高度 0.89"的既可能是三层骑楼、也可能是个茶杯。
+     此时无论乘几都是错的 —— 这正是与 Kenney(×8)/Poly Haven(×1) 的本质差别：
+     那两家的偏差是**常量**，混元的偏差是**每模型一个未知数**。
+
+     解法是把不可知的换算消掉：预处理脚本 prep_glb.py 按"目标真实高度"
+     把顶点缩放到米制并烘焙进 BIN（同时底部对齐 y=0、XZ 居中），
+     于是到达这里的每个模型都已经是米制 —— 与 Poly Haven 行为一致。
+     所以这里填 1，且**不需要** SIZE_OVERRIDE 条目。
+
+     ⚠️ 这意味着：往 src/assets/ai/ 里扔**未经 prep_glb.py 处理**的原始 GLB，
+     它会以"外接球 1.22 米"的大小出现在场景里 —— 极小、且不报错。
+     上游流水线见 scripts/ai-asset-pipeline.cjs。 */
+  [SRC.AI]: 1,
 };
+
+/** ★ 导出各源的期望缩放（2026-09-19 新增）。
+    用途只有一个：让验证脚本能断言"**观测到的**缩放 == **这个源应有的**缩放"，
+    而不是把 8 / 1 / 1 这张表在脚本里再抄一遍。
+    抄表的代价是真实存在的 —— 第四、第五个源接进来时，
+    改了这里忘了改脚本，断言就从"守卫"退化成"噪音"。
+    探针读数 = 实测，本函数 = 期望，两者比对才有意义。 */
+export function allSourceScales() { return { ...SRC_SCALE }; }
 
 /** 各源的文件扩展名 */
 const SRC_EXT = {
@@ -130,6 +160,10 @@ const SRC_EXT = {
      不在下载管理器的接管名单里；顺带每模型从 7 个请求降到 1 个。
      校验见 scripts/verify-glb-pack.cjs（52 项：容器/尺寸/内嵌/无外链）。 */
   [SRC.POLYHAVEN]: '.glb',
+  /* AI 源也走 .glb —— 预处理脚本输出的单文件 GLB（JSON+BIN+贴图全内嵌）。
+     与 Poly Haven 同样的理由：.bin 的 MIME 是 application/octet-stream，
+     会被 IDM/迅雷抢走；单文件 GLB 的 model/gltf-binary 不在接管名单里。 */
+  [SRC.AI]: '.glb',
 };
 
 /* ── 单位换算：Kenney 模型的"1 单位"不是 1 米 ────────────────────────────────
@@ -173,6 +207,20 @@ const SIZE_OVERRIDE = {
   'industrial/detail-tank-large': 4.4,
 };
 
+/** ★ 单个物件最终会被施加的缩放 —— **唯一真源**（2026-09-19 抽出）。
+    在抽出来之前，这个公式只写在 instance() 里，于是验证脚本无法知道
+    "某个物件本来该多大"，只能退而写死一个阈值（如 >1.5）去猜。
+    阈值猜法的毛病：它无法区分三种情况 ——
+      ① 正确乘了 8；② 被人改成 5（同一个阈值内，看不出来）；
+      ③ 走的是逐物件覆盖表。
+    现在 instance() 与本函数共用同一行代码，验证脚本可以逐物件断言
+    "实测 == 应有"，既没有魔法数，也不会因为新增覆盖条目而假失败。 */
+export function effectiveScale(source, kit, name, explicit) {
+  if (typeof explicit === 'number') return explicit;
+  const target = SIZE_OVERRIDE[`${kit}/${name}`];
+  return target || SRC_SCALE[source] || 1;
+}
+
 /* ── 为什么不用 DRACOLoader / KTX2Loader ────────────────────────────────
    Kenney 的 GLB 是未压缩的普通 glTF 2.0（几何走内嵌 BIN 缓冲，
    贴图是外部 PNG），既没有 Draco 压缩也没有 KTX2 纹理。
@@ -191,9 +239,10 @@ export function createAssetLoader() {
 
   /* ★ 兼容旧签名：原来只有 Kenney，调用方写 load(kit, name)。
      现在第一位是 source。为了让既有代码不改，做一次归一化：
-     若第一个参数是已知 kit 名（商业/工业/道路三套），就当成省略了 source。 */
+     若第一个参数是已知源名，就当成省略了 source。 */
+  const SOURCES = new Set([SRC.KENNEY, SRC.POLYHAVEN, SRC.AI]);
   function normSource(a, b) {
-    if (a === SRC.KENNEY || a === SRC.POLYHAVEN) return { source: a, kit: b };
+    if (SOURCES.has(a)) return { source: a, kit: b };
     return { source: SRC.KENNEY, kit: a, name: b };
   }
 
@@ -302,6 +351,22 @@ export function createAssetLoader() {
   }
 
   /**
+   * 预热一批 AI 生成资产（城中村标志物）。
+   * ★ 与 Poly Haven 分开统计的理由相同，且这里更极端：
+   *   每个 AI 模型 0.7~1.5MB（几何占大头），全量预热会明显拖慢启动。
+   *   故按 <组>/<名> 精确预热，不提供"整组一把梭"。
+   * @param {Array<[string,string]>} items  [[组, 名], ...]，如 [['hero','qilou']]
+   */
+  function warmAi(items = []) {
+    const list = Array.isArray(items[0]) ? items : [items];
+    const jobs = [];
+    for (const it of list) {
+      if (Array.isArray(it)) jobs.push(load(SRC.AI, it[0], it[1]));
+    }
+    return Promise.all(jobs).then((rs) => rs.filter(Boolean).length);
+  }
+
+  /**
    * 同步取一个资产（未载入或失败 → null）。调用方必须处理 null。
    *
    * 支持两种调用：
@@ -337,13 +402,12 @@ export function createAssetLoader() {
     const obj = proto.clone(true);
     obj.position.set(pose.x || 0, pose.y || 0, pose.z || 0);
     if (typeof pose.rotY === 'number') obj.rotation.y = pose.rotY;
-    /* ★ 尺寸换算：两源比例不同，见上方 SRC_SCALE 的说明。
-       Kenney ×8（1单位≈8m）· Poly Haven ×1（米制）。
-       pose.scale 若显式给出则优先（调用方可覆盖）。 */
-    const target = SIZE_OVERRIDE[`${kit}/${name}`];
-    const s = typeof pose.scale === 'number'
-      ? pose.scale
-      : (target || SRC_SCALE[source] || 1);
+    /* ★ 尺寸换算：各源比例不同，见上方 SRC_SCALE 的说明。
+       Kenney ×8（1单位≈8m）· Poly Haven ×1（米制）· AI ×1（上游已烘焙成米制）。
+       pose.scale 若显式给出则优先（调用方可覆盖）。
+       ★ 公式抽在 effectiveScale() 里，让验证脚本能读到"应有值"逐物件比对 ——
+         别把公式再写一份在这里，否则两处会漂移。 */
+    const s = effectiveScale(source, kit, name, pose.scale);
     obj.scale.setScalar(s);
     obj.traverse((o) => {
       if (o.isMesh) {
@@ -362,7 +426,7 @@ export function createAssetLoader() {
   /** 供验证脚本与调试面板读取的运行态快照。 */
   function report() {
     const byState = { pending: 0, ready: 0, failed: 0 };
-    const bySource = { kenney: 0, polyhaven: 0 };
+    const bySource = { kenney: 0, polyhaven: 0, ai: 0 };
     const failures = [];
     for (const [k, s] of cache) {
       byState[s.state]++;
@@ -373,7 +437,7 @@ export function createAssetLoader() {
   }
 
   return {
-    load, warm, warmPolyHaven, get, instance, report, cache,
+    load, warm, warmPolyHaven, warmAi, get, instance, report, cache,
     /** 覆盖本实例的资产根路径（dev 布局用）。 */
     setBase(base) { setAssetBase(base); },
   };
@@ -467,4 +531,43 @@ export function listHdri() {
 /** HDRI 的 URL（未载入时不请求，只是拼路径）。 */
 export function hdriUrl(name) {
   return `${ASSET_BASE}polyhaven/hdri/${name}.hdr`;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   AI 生成资产清单访问（2026-09-19）
+   ══════════════════════════════════════════════════════════════════════════
+
+   清单结构（scripts/ai-asset-pipeline.cjs 写）：
+     {
+       "groups": {
+         "hero":  { note, items: [{ name, file, w, h, d, faces, bytes }] },
+         "stall": { ... }
+       }
+     }
+   ★ w/h/d 是**预处理烘焙后**的米制实测 —— 这是本清单存在的核心理由：
+     混元直出的物理尺寸未知，只有烘焙后的值才是可信的。
+     验证脚本拿它断言"骑楼高 10.0m"，能抓到"忘记跑预处理"这类静默错误。
+   ────────────────────────────────────────────────────────────────────────── */
+
+/** 列出某个 AI 组里的条目。 */
+export function aiGroup(group) {
+  return (aiManifest && aiManifest.groups && aiManifest.groups[group] && aiManifest.groups[group].items) || [];
+}
+
+/** 找一条 AI 资产（跨组搜索，与 findPolyHaven 同语义）。 */
+export function findAi(name) {
+  const gs = (aiManifest && aiManifest.groups) || {};
+  for (const g of Object.keys(gs)) {
+    const hit = (gs[g].items || []).find((e) => e.name === name);
+    if (hit) return hit;
+  }
+  return null;
+}
+
+/** 全部 AI 资产条目（扁平）。 */
+export function listAi() {
+  const gs = (aiManifest && aiManifest.groups) || {};
+  const out = [];
+  for (const g of Object.keys(gs)) out.push(...(gs[g].items || []));
+  return out;
 }

@@ -63,13 +63,21 @@ function measure() {
        toggle 恰好完整可见 → `toggleCut` 恒 0，14 档全报"—"。
        盲区形状与 `verify-3d-mobile.cjs` 的断言⑩**完全一样**：
        **只查一个写死的元素，而缺陷在它的邻居身上。** */
+    /* ★★ 裁切边界用 **padding box**，不是 border box。
+       规范：`overflow: hidden` 把内容裁到 padding edge（边框内侧）。
+       原先用 `tr.bottom` / `tr.top`（= border box）→ **少算一个边框宽**：
+       `.s3h-tray` 有 `border: 1px`，真实 2px 裁切被读成 1px，再撞上 `> 1`
+       的阈值 → 读成 0。**与「只查 toggle」那个盲区叠加，一起把缺陷消掉了。** */
     contentCut: (() => {
       if (!tray || !tr) return null;
+      const tcs = getComputedStyle(tray);
+      const limTop = tr.top + (parseFloat(tcs.borderTopWidth) || 0);
+      const limBottom = tr.bottom - (parseFloat(tcs.borderBottomWidth) || 0);
       let worst = 0, who = null;
       for (const el of tray.querySelectorAll("*")) {
         const r = el.getBoundingClientRect();
         if (r.width < 1 || r.height < 1) continue;
-        const c = Math.max(0, r.bottom - tr.bottom) + Math.max(0, tr.top - r.top);
+        const c = Math.max(0, r.bottom - limBottom) + Math.max(0, limTop - r.top);
         if (c > worst) { worst = c; who = "." + String(el.className || "").split(" ")[0]; }
       }
       return worst > 1 ? { px: Math.round(worst), who } : null;

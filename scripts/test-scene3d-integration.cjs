@@ -18,7 +18,15 @@ const path = require("path");
 const { ensureServer, closeServer } = require("./lib/serve.cjs");
 const EDGE = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
 const PORT = 8931;
-const URL = `http://127.0.0.1:${PORT}/index.html`;
+/* ★★ 必须带 `?mode=2d`：本脚本测的是**侧栏微缩景**那条链路
+   （微缩景 → 点开全屏全景），而微缩景只存在于 2D 形态的侧栏里。
+   2026-09-19 起 3D 已是**默认**形态（scene3d_bridge.js::wantsFirst）：
+   不带参数时 `#app` 会被加上 `.s3-yield`、侧栏 `display:none`，
+   于是 `#scene3d-mini` 的 rect 恒为 0x0、`pointer-events:none`，
+   `click()` 直接抛 "Node is either not clickable" —— 症状看着像 3D 坏了，
+   其实是这个脚本的前提过期了（3D-first 那条链路由 verify-3d-first.cjs 覆盖）。
+   走 `?mode=2d` 只是把这个脚本**拉回它本来的测试对象**，不是绕过断言。 */
+const URL = `http://127.0.0.1:${PORT}/index.html?mode=2d`;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 let pass = 0, fail = 0;
@@ -26,6 +34,32 @@ const check = (name, ok, detail) => {
   console.log(`  ${ok ? "✅" : "❌"} ${name}${detail ? "  → " + detail : ""}`);
   ok ? pass++ : fail++;
 };
+
+/**
+ * 按**仿真秒**推进（与 verify-actors.cjs 同一套方法）。
+ *
+ * ★ 为什么不能用 sleep：主循环把 dt clamp 到 0.05s/帧。软渲染（SwiftShader）
+ *   下全屏全景一帧（1300+ draw call）要接近 1 秒墙钟，于是"按住 W 两秒"
+ *   实际只跑了 **1 帧** = 0.05 仿真秒 = 位移 0.16m —— 与"按键没接线"
+ *   在读数上完全一样，是一条**确定性假红**（实测连跑两次都是 0.16m）。
+ *   正解：按帧累加 min(0.05, 帧间隔)，等够**仿真秒数**再看结果，
+ *   并把 sim/frames/wall 一起报出来 —— 失败时能立刻区分
+ *   "逻辑坏了"与"机器太慢"。
+ */
+const advanceSim = (page, sec) => page.evaluate((sec) => new Promise((resolve) => {
+  let sim = 0, frames = 0;
+  const t0 = performance.now();
+  let prev = t0;
+  const f = () => {
+    const now = performance.now();
+    sim += Math.min(0.05, (now - prev) / 1000);
+    prev = now; frames++;
+    if (sim >= sec || frames > 1800 || (now - t0) > 90000) {
+      resolve({ sim: +sim.toFixed(2), frames, wall: +((now - t0) / 1000).toFixed(2) });
+    } else requestAnimationFrame(f);
+  };
+  requestAnimationFrame(f);
+}), sec);
 
 /** 真实玩家路径进游戏 */
 async function enterGame(page) {
@@ -161,13 +195,71 @@ async function main() {
      这让"一条断言坏了"伪装成"整个 3D 层崩了"，排查方向被带偏。
      改成"找不到就记一条失败、带着原因继续跑"：测试的价值在于一次跑完
      把所有问题都列出来，而不是第一个问题就掀桌。 */
+  /* ★ 2026-09-19 补：上面那句"修偶发"其实只修了一半 ——
+     `page.$()` 返回非 null 只说明**元素在 DOM 里**，不代表它可点。
+     元素被遮挡 / 尺寸为 0 / 在视口外时，`elementHandle.click()` 会抛
+     `Node is either not clickable or not an Element`，照样把整个测试打断，
+     症状与当初要修的一模一样（后半截断言一个都不跑）。
+     这里连抛异常也接住，并把"为什么点不了"直接查出来报出去 ——
+     不查根因的话，这条红永远只能靠重跑碰运气。 */
   const miniClickable = await page.$("#scene3d-mini");
+  let miniClickErr = null;
   if (miniClickable) {
-    await miniClickable.click();
+    try {
+      await miniClickable.click();
+      /* 成功也要报一条 —— 原来只在失败时 check，成功的用例**一条计数都不产生**，
+         于是"跑了但没验证"与"验证通过"在结果里长得一模一样。 */
+      check("微缩景可点击（点得下去）", true, "已派发点击，等待全景打开");
+    } catch (e) {
+      miniClickErr = e.message;
+      const why = await page.evaluate(() => {
+        const el = document.getElementById("scene3d-mini");
+        if (!el) return { exists: false };
+        const r = el.getBoundingClientRect();
+        const cs = getComputedStyle(el);
+        const cx = Math.round(r.left + r.width / 2), cy = Math.round(r.top + r.height / 2);
+        const top = document.elementFromPoint(cx, cy);
+        /* ★ 光报自己的 rect 是查不下去的：`.scene3d-mini` 的 CSS 是
+           `width:100%; aspect-ratio:16/10` —— 它自己 0x0 只说明**祖先宽度为 0**，
+           真正塌掉的是哪一层必须打出来。所以把祖先链一并报上。 */
+        const chain = [];
+        let p = el.parentElement;
+        while (p && p !== document.documentElement && chain.length < 12) {
+          const a = p.getBoundingClientRect();
+          const acs = getComputedStyle(p);
+          chain.push(`${p.tagName.toLowerCase()}${p.id ? "#" + p.id : ""}`
+            + `${p.className && typeof p.className === "string" ? "." + p.className.split(/\s+/)[0] : ""}`
+            + `[${Math.round(a.width)}x${Math.round(a.height)} ${acs.display}/${acs.pointerEvents}]`);
+          p = p.parentElement;
+        }
+        return {
+          rect: [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)],
+          display: cs.display, visibility: cs.visibility, pointerEvents: cs.pointerEvents,
+          视口: [innerWidth, innerHeight],
+          中心点上的元素: top ? (top.id || top.className || top.tagName) : null,
+          祖先链: chain.join(" < "),
+        };
+      });
+      check("微缩景可点击（打开全景）", false,
+        `click() 抛出：${miniClickErr} ｜ 现场 ${JSON.stringify(why)}`);
+    }
   } else {
     check("微缩景可点击（打开全景）", false, "#scene3d-mini 不存在，跳过 ④ 的后续断言");
   }
-  await sleep(1400);
+  /* ★★ 不能只睡固定时长。`openOverlay()` 里的 `classList.add("is-open")` 是
+     **在 `createGame3D()` 之后**才执行的，而首次构建全景（编译着色器 +
+     载入远端资产）实测要 2~4 秒 —— 睡 1400ms 在冷启动时必然读到"没打开"，
+     热缓存时又刚好能过。这正是一条"重跑一次就好"的假红，会训练人
+     "红了就再跑一遍"，比不报还糟。改成**等它真的开了**，并在超时后
+     把元素建没建、有没有提示一并报出来（见下）。 */
+  let opened = true;
+  try {
+    await page.waitForFunction(() => {
+      const el = document.getElementById("scene3d-overlay");
+      return !!el && el.classList.contains("is-open");
+    }, { timeout: 60000, polling: 250 });
+  } catch (e) { opened = false; }
+  await sleep(700);   /* 给全景 3D 一点时间渲染出第一帧（下面要数三角面） */
   const ov = await page.evaluate(() => {
     const el = document.getElementById("scene3d-overlay");
     const stage = el && el.querySelector(".scene3d-overlay__stage");
@@ -179,9 +271,27 @@ async function main() {
       calls: stats ? stats.calls : 0,
       hotspots: window.Scene3DBridge.debugHotspots(),
       loc: window.Scene3DBridge.debugOverlayLoc(),
+      /* ★ 现场取证：`buildOverlay()` 是**惰性**的（首次 openOverlay 才建），
+         所以"元素不存在"与"元素存在但没打开"是两种完全不同的故障 ——
+         前者说明 openOverlay 压根没跑（或提前 return），
+         后者说明跑了但卡在中途。不区分就只能靠猜。 */
+      elExists: !!el,
+      overlayCount: document.querySelectorAll("#scene3d-overlay").length,
+      overlayToast: (() => {
+        const t = document.querySelector(".scene3d-overlay__toast");
+        return t && !t.hidden ? t.textContent : null;
+      })(),
+      domToast: (() => {
+        const t = document.querySelector(".scene3d-toast, .s3h-toast");
+        return t && !t.hidden ? t.textContent : null;
+      })(),
     };
   });
-  check("全景已打开", ov.open);
+  check("全景已打开", ov.open,
+    ov.open ? undefined
+      : `${opened ? "类已加但读数不一致" : "20s 内未出现 is-open"}`
+        + ` ｜ 元素${ov.elExists ? "已建" : "未建"}（共 ${ov.overlayCount} 个）`
+        + ` ｜ 全景内提示=${ov.overlayToast || "无"} ｜ DOM 提示=${ov.domToast || "无"}`);
   check("全景内已渲染 3D", ov.tris > 500, `${ov.tris} 三角面 / ${ov.calls} draw calls`);
   check("全景热点已生成", ov.hotspots.length > 0, `${ov.hotspots.length} 个：${ov.hotspots.slice(0, 5).join(", ")}`);
 
@@ -207,20 +317,37 @@ async function main() {
     mapping.map((m) => `${m.kind}→${m.mapped}`).join("  "));
 
   console.log("\n⑥ 走动（真实按键，量位移）");
+  /* ★ 2026-09-19 补：`debugOverlayPos()` 在全景没打开时返回 null，
+     而下面直接读 `.x` → TypeError，整个测试再次被打断（与 ④ 同一个病）：
+     一个"上游没准备好"的状态，被写成了"下游崩溃"。
+     这里把 null 当成一条带原因的红，继续往下跑。 */
   const posBefore = await page.evaluate(() => window.Scene3DBridge.debugOverlayPos());
-  await page.keyboard.down("KeyW");
-  await sleep(2000);
-  await page.keyboard.up("KeyW");
-  await sleep(400);
-  const walk = await page.evaluate(() => ({
-    pos: window.Scene3DBridge.debugOverlayPos(),
-    fps: (window.Scene3DBridge.debugOverlayStats() || {}).fps || 0,
-  }));
-  const moved = Math.hypot(walk.pos.x - posBefore.x, walk.pos.z - posBefore.z);
-  // 注意：dt 在主循环里被 clamp 到 0.05s，软渲染(SwiftShader)下 fps 只有个位数，
-  // 位移量级受帧率压制。此断言验证的是"按键确实驱动了角色"，不是"走得够快"。
-  check("按 W 角色真实位移", moved > 0.25,
-    `${moved.toFixed(2)}m  (${posBefore.x.toFixed(1)}, ${posBefore.z.toFixed(1)}) → (${walk.pos.x.toFixed(1)}, ${walk.pos.z.toFixed(1)}) · 软渲染 ${walk.fps} fps`);
+  if (!posBefore) {
+    check("按 W 角色真实位移", false, "全景未打开 → debugOverlayPos() 为 null（根因见 ④）");
+  } else {
+    await page.keyboard.down("KeyW");
+    /* ★ 等**仿真秒**，不是墙钟秒 —— 见 advanceSim 顶注。
+       取 0.5 仿真秒（≈1.5m）而不是更多：阈值要的是"按键确实驱动了角色"，
+       0.5s 已有 6 倍余量；而软渲染下这段等 1 秒要花 ~50 秒墙钟，
+       持续重渲染期间实测偶发过一次 tab 崩溃 —— 窗口越短越稳。 */
+    const adv = await advanceSim(page, 0.5);
+    await page.keyboard.up("KeyW");
+    await sleep(400);
+    const walk = await page.evaluate(() => ({
+      pos: window.Scene3DBridge.debugOverlayPos(),
+      fps: (window.Scene3DBridge.debugOverlayStats() || {}).fps || 0,
+    }));
+    const moved = (walk.pos && posBefore)
+      ? Math.hypot(walk.pos.x - posBefore.x, walk.pos.z - posBefore.z) : 0;
+    /* 此断言验证的是"按键确实驱动了角色"，不是"走得够快"。
+       阈值 0.25m 现在是**仿真秒口径**下的（0.8 仿真秒 × 走路速度），
+       不再受帧率压制 —— 报出 sim/frames/wall 是为了让"机器慢"与"逻辑坏"
+       能被一眼分开。 */
+    check("按 W 角色真实位移", moved > 0.25,
+      `${moved.toFixed(2)}m  (${posBefore.x.toFixed(1)}, ${posBefore.z.toFixed(1)}) → `
+      + `(${walk.pos ? walk.pos.x.toFixed(1) : "?"}, ${walk.pos ? walk.pos.z.toFixed(1) : "?"})`
+      + ` · 仿真 ${adv.sim}s/${adv.frames} 帧 · 墙钟 ${adv.wall}s · 软渲染 ${walk.fps} fps`);
+  }
 
   console.log("\n⑦ 按 E 触发 → 真实游戏行动");
   // 挑一个「在当前阶段/地点确实可执行」的热点，专测最关键的接缝
@@ -305,10 +432,32 @@ async function main() {
     return !!el && el.classList.contains("is-open");
   });
   if (!stillOpen) {
-    // 同 ④：元素缺失时不要掀桌，记一条失败继续跑
+    /* 同 ④：元素缺失 / 点不动都不要掀桌，记一条失败继续跑；
+       且成功也要报一条 —— 只在失败时 check 的话，"跑了"与"通过了"在结果里没区别。 */
     const mc = await page.$("#scene3d-mini");
-    if (mc) { await mc.click(); } else { check("可重新打开全景", false, "#scene3d-mini 不存在"); }
-    await sleep(1400);
+    if (!mc) {
+      check("可重新打开全景", false, "#scene3d-mini 不存在");
+    } else {
+      try {
+        await mc.click();
+        check("可重新打开全景（点得下去）", true, "已派发点击");
+      } catch (e) {
+        check("可重新打开全景", false, `click() 抛出：${e.message}`);
+      }
+      /* ★ 同样不能睡固定时长：`is-open` 是 openOverlay 里**最后**才加的，
+         而它前面那段 `overlay3d.loadLocation()` 是同步重建整条街。
+         ★ 上限给到 60s 且用 250ms 轮询（而不是默认的 rAF 轮询）：
+         实测这台机器跑全屏全景只有 ~0.5 fps（16 帧花了 30.5 秒墙钟），
+         20s 的等待在这种帧率下**卡在门槛上**，会变成新的假红源。 */
+      try {
+        await page.waitForFunction(() => {
+          const el = document.getElementById("scene3d-overlay");
+          return !!el && el.classList.contains("is-open");
+        }, { timeout: 60000, polling: 250 });
+      } catch (e) {
+        check("重新打开后全景确实处于打开态", false, "60s 内未出现 is-open");
+      }
+    }
   }
 
   console.log("\n⑧ 切换地点");
@@ -331,13 +480,26 @@ async function main() {
     `${switched.from} → ${afterSwitch.miniLoc}（${afterSwitch.tris} 三角面）`);
 
   console.log("\n⑨ 关闭全景");
-  await page.keyboard.press("Escape");
-  await sleep(600);
-  const closed = await page.evaluate(() => {
+  /* ★★ 必须先确认它**开着**，再按 Esc。
+     原来只断言"按完 Esc 是关的" —— 而"从来没打开过"同样满足这一句，
+     于是这条断言在最该红的场景（全景压根打不开）下反而是绿的。
+     这种**空真**（vacuous truth）比直接报红更糟：它给了一个假的安全感。
+     与 ⑤-b 那两条一样，前置条件要单独断言出来。 */
+  const openBeforeClose = await page.evaluate(() => {
     const el = document.getElementById("scene3d-overlay");
-    return !el || !el.classList.contains("is-open");
+    return !!el && el.classList.contains("is-open");
   });
-  check("全景可正常关闭", closed);
+  check("关闭前全景确实处于打开态（前置条件）", openBeforeClose,
+    openBeforeClose ? "is-open 存在" : "按 Esc 前全景就没打开 → 下面的关闭断言无意义");
+  if (openBeforeClose) {
+    await page.keyboard.press("Escape");
+    await sleep(600);
+    const closed = await page.evaluate(() => {
+      const el = document.getElementById("scene3d-overlay");
+      return !el || !el.classList.contains("is-open");
+    });
+    check("全景可正常关闭", closed);
+  }
 
   console.log("\n=== 页面报错 ===");
   if (errors.length) errors.slice(0, 8).forEach((e) => console.log("   ❌ " + e.slice(0, 160)));

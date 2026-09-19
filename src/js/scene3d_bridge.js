@@ -185,7 +185,7 @@
         });
         mini.start();
       }
-      mini.loadLocation(locId);
+      mini.loadLocation(locId, { npcs: npcsAt(locId) });
       host.style.display = "";
     } catch (e) {
       // 3D 失败不影响 2D 主流程
@@ -299,7 +299,7 @@
         });
         overlay3d.start();
       }
-      overlay3d.loadLocation(locId);
+      overlay3d.loadLocation(locId, { npcs: npcsAt(locId) });
     } catch (e) {
       toast("3D 初始化失败：" + (e && e.message ? e.message : e), { forceDom: true });
       return;
@@ -410,6 +410,48 @@
     return (r.villageDebt || 0) + (r.fineDebt || 0) + (r.bankDebt || 0);
   }
 
+  /**
+   * 当前时段下，位于 locId 的命名 NPC 名单。
+   *
+   * ★ 这件事**必须由游戏侧算**，不能交给 3D 层：
+   *   "谁现在在哪"由 npcs.js 的 schedule 决定，是游戏逻辑；
+   *   3D 只该负责"把交给它的那几个人摆出来"。
+   *   把判断下沉到渲染层，以后改日程规则就要同时改两处 ——
+   *   而 3D 那侧是**构建产物**（scene3d.bundle.js），改了源不重建就不生效。
+   *
+   * ★ 为什么值得做：`getNpcCurrentLocation()` 早就实现好了，
+   *   但全库**只有 social_tab.js:240 一个消费点**（一个"拜访"按钮）。
+   *   玩家在 3D 街上走了几十次，从来遇不到自己认识了 30 天的人。
+   *   这就是"内容被埋"的字面意思 —— 不是缺内容，是内容没接线。
+   *
+   * @param {string} locId
+   * @returns {Array<{id:string,name:string,role:string}>} 空数组是完全合法的
+   */
+  function npcsAt(locId) {
+    var out = [];
+    if (!locId) return out;
+    if (typeof NPCS === "undefined" || !NPCS || !NPCS.length) return out;
+    var st = getState();
+    if (!st || !st.player) return out;
+    var slot = st.player.timeSlot || "morning";
+    /* 日程索引可能还没建（玩家一次都没打开过社交页）→ 这里补建一次。
+       不补的话本函数恒返回空数组，而且**不报任何错**：
+       症状是"3D 里永远看不见熟人，但一切正常" —— 典型静默降级。
+       initNpcLocationData 是幂等的（`if (!state._npcLocationData)` 守卫）。 */
+    if (!st._npcLocationData && typeof initNpcLocationData === "function") {
+      try { initNpcLocationData(st); } catch (e) { /* 建不起来就退回空名单 */ }
+    }
+    if (typeof getNpcCurrentLocation !== "function") return out;
+    for (var i = 0; i < NPCS.length; i++) {
+      var n = NPCS[i];
+      if (!n || !n.id) continue;
+      var at = null;
+      try { at = getNpcCurrentLocation(n.id, slot); } catch (e) { at = null; }
+      if (at === locId) out.push({ id: n.id, name: n.name || n.id, role: n.role || "" });
+    }
+    return out;
+  }
+
   /** readHUD：外壳的 HUD 数据源。返回 null 表示"现在还没有状态可显示" */
   function readHUD() {
     var st = getState();
@@ -427,6 +469,10 @@
       locId: locId,
       locIcon: lm ? lm.icon : "📍",
       locName: lm ? lm.name : "",
+      /* ★ 当前时段在这个地点的熟人名单。3D 街上那些**带名字的人**就是从这里来的。
+         这条链本来就存在（npcs.js 的 schedule + npc_location_bridge 的解算），
+         只是从前没有任何人接 —— 见 npcsAt 顶注。 */
+      npcs: npcsAt(locId),
       needs: st.needs,
       status: st.status,
       ap: {
@@ -661,7 +707,9 @@
     firstShell.start();
 
     var cur = currentLocId();
-    if (cur) firstShell.loadLocation(cur);
+    /* 首帧就带上名单：否则会先出现一条"空街"再补人，
+       而 mountFirst 的下一句就是 notify —— 玩家第一眼看到的画面里不该缺人。 */
+    if (cur) firstShell.loadLocation(cur, { npcs: npcsAt(cur) });
     lastMsgLen = (getState().messageLog || []).length;
 
     ensureChangeHook();

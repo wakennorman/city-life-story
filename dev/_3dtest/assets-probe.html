@@ -85,6 +85,20 @@
       let glbMeshes = 0, leftoverFallback = 0, texturedMaterials = 0;
       let sceneFound = false, childGroups = 0, wrapperFlagged = 0;
       let glbScale = 0, glbMaxDim = 0;
+      /* ★ 按来源分组的观测值（2026-09-19 修）。
+         原先是"取遍历撞上的第一个 glb 包装"的单一标量 —— 只够描述单源场景。
+         现在三源并存：Kenney 要 ×8、Poly Haven 与 AI 都是 ×1。
+         AI 楼进 slum 之后，遍历先撞上它 → 标量读到 1 →
+         验证脚本那条"已做换算（>1.5）"就假失败了。
+         分开记才能同时表达"Kenney 真的乘了 8"和"AI 真的是 1"。 */
+      const scaleBySource = {}, maxDimBySource = {}, countBySource = {};
+      /* ★ 逐物件采样：{source, kit, name, observed, expected}。
+         expected 由加载器自己的 effectiveScale() 算出（唯一真源），
+         于是验证脚本能断言"实测 == 应有" —— 不需要任何阈值。
+         ★ 按源配额（每源 ≤4）而不是总量上限：遍历顺序是树序，
+           全都被先撞上的 AI 骑楼占满时，"12 个样本"其实只验了一个源。 */
+      const scaleSamples = [];
+      const _sampPerSrc = {};
       const textureNames = [];
       const root = (shell.view3d && shell.view3d.scene) || null;
       if (root) {
@@ -106,14 +120,24 @@
                wrapperFlagged = pump 登记成功（逻辑层）
                glbMeshes     = 真网格在树里（渲染层） */
           if (o.userData && o.userData.glb) {
+            const srcKey = o.userData.glb.source || 'kenney';
             if (o.userData.glb.ready) wrapperFlagged++;
             if (o.userData.glb.ready && o.children.length > 0) {
               glbMeshes++;
+              countBySource[srcKey] = (countBySource[srcKey] || 0) + 1;
               /* ★ 尺寸取证：缩放施加在**包装 Group 的子对象**上（不是包装本身），
                  所以必须读子对象的 scale，读包装会永远得到 1。 */
-              if (glbScale === 0) {
-                const inner = o.children.find((c) => !c.userData.isFallback) || o.children[0];
-                glbScale = Math.round(inner.scale.x * 100) / 100;
+              const inner = o.children.find((c) => !c.userData.isFallback) || o.children[0];
+              const sc = Math.round(inner.scale.x * 100) / 100;
+              if (glbScale === 0) glbScale = sc;
+              if (scaleBySource[srcKey] === undefined) scaleBySource[srcKey] = sc;
+              if ((_sampPerSrc[srcKey] || 0) < 4) {
+                _sampPerSrc[srcKey] = (_sampPerSrc[srcKey] || 0) + 1;
+                const g = o.userData.glb;
+                scaleSamples.push({
+                  source: srcKey, kit: g.kit, name: g.name, observed: sc,
+                  expected: (S3.effectiveScale ? S3.effectiveScale(srcKey, g.kit, g.name) : null),
+                });
               }
               // 用包围盒量真实世界尺寸（手算顶点范围，避免依赖 Box3 导入）
               let mn = [1e9, 1e9, 1e9], mx = [-1e9, -1e9, -1e9];
@@ -133,7 +157,12 @@
               });
               const dims = [mx[0] - mn[0], mx[1] - mn[1], mx[2] - mn[2]];
               const d = Math.max(...dims);
-              if (d < 1e8 && d > glbMaxDim) glbMaxDim = Math.round(d * 10) / 10;
+              if (d < 1e8) {
+                if (d > glbMaxDim) glbMaxDim = Math.round(d * 10) / 10;
+                if (maxDimBySource[srcKey] === undefined || d > maxDimBySource[srcKey]) {
+                  maxDimBySource[srcKey] = Math.round(d * 10) / 10;
+                }
+              }
             }
           }
         });
@@ -154,6 +183,12 @@
         glbMeshes,
         glbScale,
         glbMaxDim,
+        scaleBySource,
+        maxDimBySource,
+        countBySource,
+        scaleSamples,
+        /* 期望缩放直接从加载器读 —— 脚本不再自带一张会漂移的表 */
+        expectedScaleBySource: (S3.allSourceScales ? S3.allSourceScales() : null),
         sceneFound,
         childGroups,
         wrapperFlagged,

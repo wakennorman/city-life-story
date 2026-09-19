@@ -103,6 +103,17 @@ async function main() {
        若不过滤，这里会持续报**误导性红灯**，把人引去查不存在的 bug ——
        而漏掉真缺陷的风险由那套专用脚本兜住。 */
     if (/polyhaven\/models\/.*\.glb(\?|$)/i.test(u)) return;
+    /* ★ 同理滤掉 AI 源大件（2026-09-19 追加）。AI 模型 0.7~2.3MB，
+       是本项目里**单个最大**的资源（old_apartment 2.33MB）。
+       实测症状与 Poly Haven 完全同型：这一轮报 old_apartment、下一轮不报，
+       而同一 URL 单独请求稳定 200。
+       判定为同一个已知环境问题（localhost 竞态 abort），故同一条纪律处理。
+       覆盖 AI 链路的专用套件有三套，口径都比这里严：
+         · verify:3d-assets    27 项（含 AI 源接入 + 逐物件缩放比对）
+         · shot:ai-placement   23 项（数场景树实例 + 尺寸 ±5%）
+         · verify:ai-viewer     8 项（试看台端到端，含 5 个模型真实替换）
+       漏掉真缺陷的风险由那三套兜住；留在这里只会持续报误导性红灯。 */
+    if (/assets\/ai\/.*\.glb(\?|$)/i.test(u)) return;
     (/(favicon|\.ico)(\?|$)/i.test(u) ? noise : errors).push("[reqfail] " + u);
   });
 
@@ -127,6 +138,27 @@ async function main() {
   console.log("① 3D 主视图");
   const s0 = await page.evaluate(() => window.__shell.debug);
   check("3D 已渲染出三角面", s0.tris > 1000, `${s0.tris} 三角面 / ${s0.calls} draw calls`);
+  /* ★ 在**同一时点**补一次"藏掉动态角色"的读数。
+     为什么必须在这里量、不能挪到后面：draw call 随地点变化极大
+     （同一个场景在出生点是两百多、在批发市场能到上千），
+     后面那条护栏的基线 ≈240 就是在这里取的。
+     若挪到脚本中段（已经切过好几个地点）再去量，读数会变成 1100+，
+     护栏立刻假红 —— 而红的原因只是"量错了地方"，与倒角成本无关。
+     （实测踩过一次，所以把测量钉在 s0 旁边。）
+     隐藏 visible=false 的对象在 three 里连阴影 pass 都不进，是干净的一次归因。 */
+  const s0Static = await page.evaluate(async () => {
+    const v = window.__shell.view3d;
+    const grp = v.scene && v.scene.children.find((g) => g.name === 'actors');
+    const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    await frame();
+    const withActors = v.stats.calls;
+    if (grp) grp.visible = false;
+    await frame();
+    const staticOnly = v.stats.calls;
+    if (grp) grp.visible = true;
+    await frame();
+    return { withActors, staticOnly, hasActors: !!grp };
+  });
   const fill = await page.evaluate(() => {
     const c = document.querySelector('.s3s3d-stage canvas');
     const r = c.getBoundingClientRect();
@@ -374,13 +406,18 @@ async function main() {
       if (o.userData && o.userData.sills) sills += o.userData.sills;
     });
     const surfaces = d ? d.surfaces : [];
-    const structural = surfaces.filter((s) => s.kind !== 'sign' && s.kind !== 'glass');
+    /* ★ 覆盖率分母改用 materials.js::materialDebug().normalCoverage —— **单一真源**。
+       这里原来又抄了一份 `kind !== 'sign' && kind !== 'glass'`，于是 2026-09-19
+       新增海报 / 牛皮癣 / 横幅三个平面 kind 时，源码侧的排除名单更新了、
+       脚本侧没更新 → 覆盖率断言假红（81/103，实际源码侧已 100%）。
+       护栏里重复实现被守护的逻辑，正是 index.js 注释警告过的同一个反模式。 */
+    const cov = (d && d.normalCoverage) || { expected: 0, withHeight: 0 };
     return {
       tileM: d && d.tileM, ext: d && d.ext, noise: d && d.noise,
       normalsBuilt: d && d.normalMapsBuilt,
       matTotal: total, matWithNormal: withNormal, matNormalScaleSet: nsSet,
       uniqueNormals: seen.size, badColorSpace: badCS,
-      covered: structural.filter((s) => s.hasHeight).length, structural: structural.length,
+      covered: cov.withHeight, structural: cov.expected,
       res1024: [...new Set(surfaces.filter((s) => s.resolution === 1024).map((s) => s.kind))].sort(),
       feet: surfaces.filter((s) => s.metersPerRepeat === 2.4).length,
       chamfers, sills, chamferGroups: cgroups,
@@ -441,10 +478,21 @@ async function main() {
   /* 单帧 draw call 上限 —— 倒角会把几何体数量抬上去（每栋多 2~4 个盒）。
      这条断言是**成本护栏**：如果以后有人把倒角写成"全包一圈"或给每个窗都补洞口边，
      draw call 会翻倍，而这一点在画面上看不出来（只是帧率掉了）。
-     实测基线 ≈ 240；留 1.6 倍余量到 400。 */
-  const dc = s0.calls;
-  check("单帧 draw call 仍在护栏内（倒角没把成本抬爆）",
-    dc > 0 && dc < 400, `${dc} 次（基线 ≈240，护栏 400）`);
+     实测基线 ≈ 240；留 1.6 倍余量到 400。
+
+     ★ 2026-09-19：护栏改成**只量静态场景**（读数在 ① 处与 s0 同时刻采集，
+       见那里的注释：不能挪到脚本中段，否则地点一换读数就翻几倍）。
+       起因：动态角色系统（人流/车流/动物）上线后合计 +342 次 draw call，
+       于是这条断言变红 —— 但红的原因是**场景里多了活人**，不是倒角成本失控。
+       护栏一旦被别的东西污染就不再是护栏：真出现"倒角翻倍"时，
+       它已经被角色顶到 700+，反而查不出来。
+       所以量"把角色藏掉"的读数，恢复它原本的语义（建筑/道具的静态成本）；
+       角色系统自己的开销由 verify:actors 的增量归因段单独守（+350 / 预算 420）。 */
+  const dc = s0Static.staticOnly;
+  check("静态场景单帧 draw call 仍在护栏内（倒角没把成本抬爆）",
+    dc > 0 && dc < 400,
+    `${dc} 次（基线 ≈240，护栏 400）· 含角色共 ${s0Static.withActors} 次`
+    + `（角色 +${s0Static.withActors - dc}）`);
 
   /* ★ 颜色密度与凹凸密度必须成对 —— 这是从"已知偏差"升级来的正式断言。
      起因：世界地面走 world.js::tileMat()，它**只克隆 map**，于是材质克隆后

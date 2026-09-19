@@ -62,6 +62,30 @@ export function create3DShell(opts = {}) {
   let view = null;
   let currentId = null;
   let running = false;
+  /* 命名 NPC 名单的"指纹"。locId@slot 没变就什么都不做 ——
+     refresh() 在一次玩家操作里会被调用很多次（StateManager 每个字段一次
+     notify，中间还有 setTimeout 合并），不闸住就会反复重建角色。 */
+  let npcKey = '';
+
+  /**
+   * 把"当前地点 + 当前时段"的命名 NPC 名单应用到场景。
+   *
+   * ★ 为什么指纹要同时含 locId 和 slot，而不是只在 slot 变化时重建：
+   *   两者任一变化都会换人 —— 换地点换人，同地点换时段也换人。
+   *   用一个指纹覆盖两种情况，就少一处"只处理了其中一种"的漏网。
+   * ★ 为什么不在这里重新 loadLocation：见 bridge.js::setNamedNpcs 的注释
+   *   （整条街的行人车辆会在玩家眼前重置，人物瞬移 = 一眼就是 bug）。
+   */
+  function applyNpcs(s) {
+    if (!view || !s || !s.locId) return;
+    /* 场景还没切到 s.locId 时不动 —— 否则会把 A 地点的名单贴到 B 地点上。 */
+    if (s.locId !== currentId) return;
+    const key = s.locId + '@' + (s.slot || '');
+    if (key === npcKey) return;
+    npcKey = key;
+    /* 名单为空是完全合法的：绝大多数地点在绝大多数时段都没有熟人在场。 */
+    view.setNamedNpcs(s.npcs || []);
+  }
 
   function core() {
     if (view) return view;
@@ -96,8 +120,11 @@ export function create3DShell(opts = {}) {
              —— 画面与文字各说各话，且不报错、不崩溃，最难查的一类。
              所以场景切换只有这一个入口，travel() 也交给它。 */
           if (s.locId && s.locId !== currentId && view) {
-            if (view.loadLocation(s.locId)) {
+            /* 命名 NPC 名单随场景一起交出去：换地点和换人必须是**同一帧**的，
+               分两步会出现"人已经到了公园，公园里却一个熟人都没有"的中间态。 */
+            if (view.loadLocation(s.locId, { npcs: s.npcs })) {
               currentId = s.locId;
+              npcKey = s.locId + '@' + (s.slot || '');
               // 可达地点随所在地变化，地图列表要跟着重刷
               if (readLocations) hud.setLocations(readLocations() || [], travel);
             }
@@ -108,6 +135,11 @@ export function create3DShell(opts = {}) {
           /* 时段照明：上午/下午/傍晚/夜间 四个 slot 跟着走，阳光/雾/曝光都追平。
              inZOI 拟真的核心就是「动态时间」而非 materia。 */
           if (s.slot && view) view.setTimeSlot(s.slot);
+          /* 时段变了 → 街上该站的人也该换一批（同一地点、不同时段换人）。
+             ★ 注意这**不是**锦上添花：NPC 的 schedule 就是按时段定义的
+               （npcs.js），不跟着换的话，「王大婶上午在商业区、傍晚回巷子」
+               这条规则在 3D 里根本不存在，玩家只会看到一张钉死的脸。 */
+          applyNpcs(s);
         }
       }
       if (readActions) {
@@ -124,11 +156,17 @@ export function create3DShell(opts = {}) {
   }
 
   /* ── 地点 ───────────────────────────────────────────────────────────── */
-  function loadLocation(id) {
+  function loadLocation(id, opts) {
     const v = core();
-    const w = v.loadLocation(id);
+    const w = v.loadLocation(id, opts);
     if (!w) return null;
     currentId = id;
+    /* 指纹清零，让下一次 refresh() 用 readHUD（权威名单）再对一次。
+       ★ 为什么不在这里直接写指纹：这个入口拿不到 slot（调用方未必提供）。
+         写一个错的指纹会让 applyNpcs 以为"已经应用过"，于是**永远不再更新**。
+         清零是安全侧：代价只是多跑一次 setNamedNpcs，
+         而它内部按 id 列表做了幂等判断，名单一致时直接返回 0。 */
+    npcKey = '';
     return w;
   }
 

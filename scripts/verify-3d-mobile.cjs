@@ -130,7 +130,16 @@ function measure() {
        而头部自然高 41px）→ 底部 padding 被切 4px。
        被查的那个元素恰好完整可见，于是**断言一直绿**。
        判据换成"内容有没有被切"之后，两类都能覆盖：
-       子元素被切 ⇒ 父元素进 badCut；只切 padding ⇒ 只进报告。 */
+       子元素被切 ⇒ 父元素进 badCut；只切 padding ⇒ 只进报告。
+
+     ★★ 裁切边界是 **padding box，不是 border box**（本仪器第二个盲区）：
+       CSS 规范规定 `overflow: hidden` 把内容裁到 **padding edge**（边框内侧）。
+       而原先取的是 `p.getBoundingClientRect()` —— 那是 **border box**，
+       于是**少算一个边框宽**。`.s3h-tray` 有 `border: 1px` →
+       真实的 2px 裁切被读成 1px，再撞上下面 `<= 1` 的容差 → 读成 0。
+       **两个盲区叠加，把一个真实存在的裁切消成了"没问题"。**
+       （2026-09-18 由线上读数 `.s3h-tray@146,766 236×62` /
+         `.s3h-tray-head@147,767 234×62` 的 1px 越界反查出来的。） */
   const clipAmt = (el, lim) => {
     const r = el.getBoundingClientRect();
     return { top: Math.max(0, lim.top - r.top), bottom: Math.max(0, r.bottom - lim.bottom) };
@@ -144,7 +153,12 @@ function measure() {
       const ps = getComputedStyle(p);
       if (ps.overflow !== "visible" || ps.overflowX !== "visible" || ps.overflowY !== "visible") {
         const pr = p.getBoundingClientRect();
-        lim = { cls: "." + String(p.className || "").split(" ")[0], top: pr.top, bottom: pr.bottom };
+        const bT = parseFloat(ps.borderTopWidth) || 0;
+        const bB = parseFloat(ps.borderBottomWidth) || 0;
+        lim = {
+          cls: "." + String(p.className || "").split(" ")[0],
+          top: pr.top + bT, bottom: pr.bottom - bB,   /* ← padding box（规范口径） */
+        };
         break;
       }
       p = p.parentElement;

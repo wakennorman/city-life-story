@@ -156,11 +156,60 @@ async function main() {
   /* ★ 这一条是本脚本最有价值的一条断言。
      模型"加载成功"与"尺寸正确"是两件事：Kenney 的模型按 1 单位 = 1 格建，
      直接放进以米为单位的场景里会变成几个像素大的小点 —— 没有报错、
-     贴图正常、材质正常，只有尺寸错。靠肉眼在缩略图上几乎看不出来。 */
-  check("GLB 实例被放大约 8 倍（已做单位换算）", info.glbScale > 1.5,
-    `实测缩放 ${info.glbScale}`);
+     贴图正常、材质正常，只有尺寸错。靠肉眼在缩略图上几乎看不出来。
+
+     ★★ 2026-09-19 修正断言口径（原本是错的，不是资产错了）。
+     原先写死 `info.glbScale > 1.5`（"被放大约 8 倍"），探针取的是
+     **遍历撞上的第一个** glb 包装的 scale。单源时代够用；三源并存后：
+       Kenney ×8（另有逐物件覆盖表，值域 1.9~11）
+       Poly Haven ×1（米制）· AI ×1（上游烘焙成米制）
+     AI 骑楼摆进 slum 后，遍历先撞上它 → 标量读到 1 → 断言假失败。
+     改成写 `> 1.5` 也不够：Kenney 的集装箱覆盖值是 1.9，离阈值太近，
+     而且它区分不了"被人从 8 改成 5"这种真错误。
+
+     正确口径：**逐物件比对"实测缩放"与"加载器自己算出的应有缩放"**。
+     应有值由 assets.js::effectiveScale() 提供（与 instance() 共用一行代码），
+     所以两边永远不会漂移，也没有任何魔法阈值。 */
+  const samples = info.scaleSamples || [];
+  const obs = info.scaleBySource || {};
+  const cnt = info.countBySource || {};
+  const srcKeys = Object.keys(obs);
+  console.log(`  ℹ️  场景内各源：${srcKeys.length
+    ? srcKeys.map((k) => `${k} ×${obs[k]}（${cnt[k] || 0} 个）`).join("  |  ")
+    : "（没有已替换的 glb）"}`);
+  console.log(`  ℹ️  逐物件样本（每源 ≤4）：${samples.length
+    ? samples.map((s) => `${s.kit}/${s.name}×${s.observed}`).join("  ")
+    : "（无）"}`);
+  const mismatch = samples.filter((s) => s.expected === null || Math.abs(s.observed - s.expected) > 0.001);
+  check("每个物件的实测缩放 == 加载器算出的应有缩放（换算漏做的源会在此暴露）",
+    samples.length > 0 && mismatch.length === 0,
+    mismatch.slice(0, 3).map((s) => `${s.kit}/${s.name} 实测×${s.observed} 应×${s.expected}`).join(" ; ")
+      || `${samples.length} 个样本全部吻合`);
+  /* ★ 覆盖率断言：场景里有几个源，样本就必须覆盖几个源。
+     没有这条，采样一旦退化成"只采到一个源"（例如遍历顺序变了，
+     或配额写错），上面那条会以"减少覆盖面"的方式静默变绿。 */
+  const sampSources = Array.from(new Set(samples.map((s) => s.source)));
+  const uncovered = srcKeys.filter((k) => sampSources.indexOf(k) === -1);
+  check("采样覆盖了场景里出现的每一个源（防止断言静默缩水）",
+    uncovered.length === 0,
+    uncovered.length ? `未覆盖：${uncovered.join(",")}` : `已覆盖 ${sampSources.join("/")}`);
+  /* 保留一条粗护栏：万一 effectiveScale 被人改成恒返 1（那上面那条会一起变绿），
+     这条独立的"Kenney 必须 >1.5"仍会红。两条断言互为对照，故意留冗余。 */
+  check("Kenney 源确实被放大了（单位换算真的执行了，独立护栏）",
+    obs.kenney === undefined || obs.kenney > 1.5,
+    obs.kenney === undefined ? "本场景无 Kenney 实例（跳过）" : `Kenney 实测 ×${obs.kenney}`);
   check("缩放后单物件高度落在合理区间（0.5m ~ 30m）", info.glbMaxDim > 0.5 && info.glbMaxDim < 30,
     `最大尺寸 ${info.glbMaxDim}m`);
+
+  console.log("\n⑤-c AI 源接入（第三个来源，2026-09-19 新增）");
+  /* 只做最粗的一条：AI 实例真的进了场景。
+     更细的"摆在哪、摆几个、尺寸对不对"由 shot-ai-placement.cjs 负责 ——
+     那条才是抓"下好了但没摆进场景"的那一层。
+     这里存在的意义：AI 源若整条链断了（manifest 没生成 / SRC 没登记），
+     会在这一条上立刻显形，而不是等跑到另一个脚本才发现。 */
+  const aiCount = cnt.ai || 0;
+  check("AI 源实例已替换进场景（manifest 与 SRC 登记有效）", aiCount > 0,
+    `AI 实例 ${aiCount} 个（${Object.keys(info.scaleBySource || {}).join("/") || "无源"}）`);
 
   console.log("\n⑥ 降级必须真的存在（不是「永不失败的假绿」）");
   check("基础路径错误时加载器返回 null 而非抛异常", info.degradeOk === true,

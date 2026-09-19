@@ -29,6 +29,7 @@ import { setAssetLoader, pumpAssets, pendingAssetCount, dropPendingAssets } from
 import { createAssetLoader, polyHavenGroup, listPolyHaven, listHdri, SRC } from './assets.js';
 import { mergeStatics, countScene } from './merge.js';
 import { Player, IsoCamera } from './player.js';
+import { ActorSystem } from './actors.js';
 /* 后处理（three/addons → examples/jsm，见 three 的 exports 映射）。
    顺序在下面 POST 注释里说明，改顺序会让画面全错。 */
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -515,8 +516,114 @@ export function createGame3D(opts) {
     'road-barrier', 'road-barrier-2',
   ];
 
+  /* ── AI 生成资产（城中村标志物）的预热表 ──────────────────────────────
+     ★ 与上面两张表同一个纪律：**只列必然会被摆进场景的件**，
+       预热不摆 = 白下载。清单与 world.js 的 AI_HERO_PLAN / AI_STALL_PLAN
+       一一对应，改一处要同步另一处。
+
+     ★ 为什么 AI 这批**必须显式列**，不能像清单那样"整组预热"：
+       单个模型（几何占大头）0.7~1.5MB，5 件就是 5MB 级 ——
+       而 glbProp 是"按需登记"的，一个地点最多用其中 1~2 件。
+       整组预热会把 29 个地点用不到的那些也拉下来。
+
+     ★ 体积排序也要注意：这批比 Poly Haven 那批**更大**
+       （减面后仍有 1.5 万~2.7 万三角面/件）。故与 Kenney/Poly Haven
+       分源 pump，谁先到谁先换，不互相拖累。 */
+  const WARM_LIST_AI = [
+    ['hero', 'qilou'],
+    ['hero', 'old_apartment'],
+    ['hero', 'lingnan_temple'],
+    ['stall', 'dapaidang'],
+    ['stall', 'market_stall'],
+  ];
+
   /* ── 角色 / 相机 ────────────────────────────────────────────────────── */
   const player = new Player(scene, [], new THREE.Vector3(0, 0, 10));
+  /* 动态角色（人流/车流/动物/NPC）。★ 它自带 Group 且**不挂在 world.group 下** ——
+     挂进去会被 mergeStatics 合批焊死，角色就再也动不了（见 actors.js 文件头）。 */
+  const actors = new ActorSystem(scene);
+  /* ── 3D 场景内提醒 ────────────────────────────────────────────────────
+     2026-09-19：把原本的 DOM toast 换成**世界空间的浮字**。
+     为什么必须做：项目已经是 3D-first，一个 HTML 小方块浮在 3D 画面上
+     会立刻暴露"这其实是网页套壳"。用 Sprite 贴在玩家上方升起淡出，
+     视觉上就是场景的一部分（而且永远面向相机，不用处理朝向）。
+
+     ★ 实现取 Sprite 而不是 CSS/HTML 叠加：sprite 会被后处理链（AO/Bloom/tone map）
+       一起处理，光感与场景一致；DOM 元素永远做不到这一点。 */
+  const noticeLayer = new THREE.Group();
+  noticeLayer.userData.noMerge = true;
+  scene.add(noticeLayer);
+  const notices = [];
+  /* 提示条纹理缓存：同一句话只画一次 canvas。 */
+  const noticeTexCache = new Map();
+  function noticeTexture(text, color) {
+    const key = text + '|' + color;
+    if (noticeTexCache.has(key)) return noticeTexCache.get(key);
+    const pad = 28;
+    const c = document.createElement('canvas');
+    const ctx2 = c.getContext('2d');
+    const font = '600 44px "PingFang SC","Microsoft YaHei",sans-serif';
+    ctx2.font = font;
+    const w = Math.ceil(ctx2.measureText(text).width) + pad * 2;
+    const h = 84;
+    c.width = w; c.height = h;
+    const g = c.getContext('2d');
+    /* 半透明底 + 圆角，保证在明暗背景上都读得清。 */
+    g.fillStyle = 'rgba(18,20,22,0.78)';
+    const r = 18;
+    g.beginPath();
+    g.moveTo(r, 0); g.lineTo(w - r, 0); g.quadraticCurveTo(w, 0, w, r);
+    g.lineTo(w, h - r); g.quadraticCurveTo(w, h, w - r, h);
+    g.lineTo(r, h); g.quadraticCurveTo(0, h, 0, h - r);
+    g.lineTo(0, r); g.quadraticCurveTo(0, 0, r, 0);
+    g.closePath(); g.fill();
+    g.font = font;
+    g.fillStyle = color || '#f2efe8';
+    g.textBaseline = 'middle';
+    g.fillText(text, pad, h / 2 + 2);
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    noticeTexCache.set(key, tex);
+    return tex;
+  }
+  /**
+   * 在 3D 场景里弹一条提醒（替代 DOM toast）。
+   * @param {string} text 文案
+   * @param {object} o { kind: 'ok'|'warn'|'bad', color, life }
+   *
+   * kind → 配色：与 HUD 的 `.s3h-toast.is-ok/is-warn/is-bad` 三档一一对应，
+   * 这样从 DOM 浮条切过来时，玩家读到的"语气"完全不变（只有载体变了）。
+   */
+  const NOTICE_COLOR = { ok: '#d9f2cf', warn: '#ffd6a5', bad: '#ffb3a7' };
+  function notify(text, o = {}) {
+    if (!text) return;
+    const color = o.color || NOTICE_COLOR[o.kind] || '#f2efe8';
+    const tex = noticeTexture(String(text), color);
+    const ar = (tex.image.width / tex.image.height) || 4;
+    const hgt = 0.5;
+    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+    const sp = new THREE.Sprite(mat);
+    sp.scale.set(hgt * ar, hgt, 1);
+    /* 已有提示往上叠，避免两条提醒完全重叠看不清。 */
+    sp.position.set(player.pos.x, player.pos.y + 2.35 + notices.length * 0.62, player.pos.z);
+    noticeLayer.add(sp);
+    notices.push({ sp, t: 0, life: o.life || 2.6, y0: sp.position.y });
+  }
+  function updateNotices(dt) {
+    for (let i = notices.length - 1; i >= 0; i--) {
+      const n = notices[i];
+      n.t += dt;
+      const k = n.t / n.life;
+      /* 缓慢上浮 + 后 40% 淡出。刚出现时不淡入（要立刻可读）。 */
+      n.sp.position.y = n.y0 + k * 0.5;
+      n.sp.material.opacity = k < 0.6 ? 1 : Math.max(0, 1 - (k - 0.6) / 0.4);
+      if (n.t >= n.life) {
+        noticeLayer.remove(n.sp);
+        n.sp.material.dispose();
+        notices.splice(i, 1);
+      }
+    }
+  }
   /* ★ 相机深度（P2-4）：near 0.1 → 0.5、far 400 → 250。
      · near 抬高是为了**深度精度**：0.1 与 250 的比值 2500:1，深度缓冲在远处
        几乎全是同一个值（z-fighting / 远处的 AO 与阴影会抖）。0.5 与 250 是 500:1。
@@ -825,7 +932,16 @@ export function createGame3D(opts) {
     }
   }
 
-  function loadLocation(id) {
+  /**
+   * 载入地点。
+   * @param {string} id
+   * @param {object} [loadOpts] { npcs: [{id,name}] }
+   *   ★ npcs 是**当前时段在这个地点**的命名 NPC 名单，由游戏侧
+   *     `scene3d_bridge.js::npcsAt()` 用 npcs.js 的 schedule 解算出来。
+   *     3D 层不自己判断"谁该在这儿" —— 那是游戏逻辑，不是渲染的事；
+   *     这里只负责"把给我的这几个人摆出来"。见 actors.js::_spawnNamed。
+   */
+  function loadLocation(id, loadOpts) {
     if (!data.locations[id]) {
       opts.onError?.(new Error(`未知地点: ${id}`));
       return null;
@@ -834,6 +950,57 @@ export function createGame3D(opts) {
     disposeWorld(world);
 
     world = buildLocation(scene, data, id);
+
+    /* 动态角色按新地点重建。
+       ★ 放在 buildLocation 之后、pumpAssets 之前：角色不参与资产回填，
+         但要在同一帧内就位，否则切地点会有一瞬间"空街"。
+       ★ footfall 直接透传 —— 人流密度由地点内容决定（闹市人多，废地没人），
+         这是"内容驱动 3D"而不是"随机撒人"。 */
+    actors.setWorld({
+      id,
+      layout: world.stats.layout,
+      streetLen: world.streetLen,
+      roadW: world.roadW,
+      laneHalf: world.laneHalf,
+      tier: world.stats.tier,
+      footfall: world.meta && typeof world.meta.footfall === 'number' ? world.meta.footfall : 0.6,
+      colliders: world.colliders,
+      /* ★ 行为锚点（摊主站位 / 店铺门口）。见 world.js::Ctx.anchor ——
+         没有它，actors.js 只能让所有人沿街走。 */
+      anchors: world.anchors,
+      /* ★ 飞线两端。验证脚本用它断言"电线不在建筑轮廓内"。
+         电线会被 mergeStatics 合批，合批后无法从场景树里逐条核对。 */
+      wires: world.wires,
+      /* ★ 命名 NPC 名单（当前时段 ∩ 本地点）。空数组是**完全合法**的 ——
+         绝大多数地点在绝大多数时段都没有熟人在场，那正是"城中村很大、
+         人各有各的作息"应有的样子。切勿为了"看起来热闹"而退化成随机撒人。 */
+      npcs: (loadOpts && loadOpts.npcs) || [],
+    });
+    /* 飞线单独交给桥接层保存一份 —— 场景树里查不到（已合批），
+       而验证脚本需要一个**不依赖 world 对象**的读数入口。 */
+    scene.userData.wires = world.wires;
+    /* 碰撞盒同样转存一份。★ 为什么非要有这个读数：
+       恒稳反馈「人物、车辆可以直接穿墙而过」时，所有既有断言全绿 ——
+       因为它们只查"角色位置合不合理"，没有一条查"是不是在墙里"。
+       穿模是**静默**的（不报错、不崩），没有可断言的读数就守不住它。
+       验证脚本拿它做"角色 ∩ 碰撞盒 = ∅"的判定。 */
+    scene.userData.__colliders = world.colliders;
+    /* 行为锚点也转存一份。★ 为什么守卫需要它（2026-09-19）：
+       穿模守卫只会说"某个 keeper 在墙里"，但**说不出它为什么在那儿** ——
+       撞到的是自己摊位的盒子？还是被别的道具顶到了？
+       没有锚点读数就只能靠猜。有了它就能直接对账：
+       "这条锚点本来该站在摊位外侧，为什么落进了摊位的 AABB 里"。 */
+    scene.userData.__anchors = world.anchors;
+    /* ★ 车道走廊（2026-09-19）：|x| < corridor 内不许有任何静态碰撞盒，
+       否则车会被**拦死**（实测 car#1 停驶 1.8s，且不报任何错）。
+       ★ 这个数来自 world.js，而 world.js 又与 actors.js 共用 road.js ——
+         所以守卫断言用的是**车流自己那条公式**，不是另抄一份近似值。
+         验证脚本要能分辨"走廊读数缺失"（守卫静默失效）与"车道上真没东西"。 */
+    scene.userData.__corridor = world.corridor || 0;
+    /* ★ 硬线另外交一个（= 走廊 − 留白）：守卫用它断言"车会不会真的撞上"。
+       只给走廊一个数不行 —— 守卫会把"挤不进留白但与车无碍"的件判红，
+       而假红与假绿一样会让断言失去可信度。见 road.js::carCorridor。 */
+    scene.userData.__carClearance = world.carClearance || 0;
 
     /* 把已就绪的外部资产回填进本次构建的场景。
        ★ 必须在 mergeStatics **之前**：GLB 是静态几何，越早挂上去，
@@ -925,7 +1092,23 @@ export function createGame3D(opts) {
   function loop(now) {
     if (!running) return;
     rafId = requestAnimationFrame(loop);
-    const dt = Math.min(0.05, (now - last) / 1000);
+    /* ★★ dt 必须**双侧**夹取 —— 原来只有 `Math.min(0.05, …)`，只挡了上限（2026-09-19）。
+       首帧的 rAF 时间戳可能**小于** `last`：`last` 是由 `performance.now()` 赋的，
+       而 rAF 回传的是"该帧被调度"的时刻 —— 页面初始化越久（着色器编译、
+       资材解码），两者差得越多。于是第一帧的 dt 会是一个**负的大数**。
+
+       负 dt 的危害不是"这一帧倒退一点"，而是**污染一切累加型计时器**：
+         · Task 里 `pauseT -= dt` 会一瞬间把暂停推到十几秒之后；
+         · 表现为「进街后整条街的行人十几秒一动不动」。
+       实测（_diag-pause）：`pauseT` 恰好等于 `entryPause + 19.14` ——
+       四个样本的偏移**完全一致**，说明它来自同一个负 dt，而不是随机；
+       而 `pauseCd` 纹丝不动，因为它的递减写在"暂停中"分支里、压根没执行。
+
+       ★ 这也纠正了一段长期的误判：本文件别处曾把"行人行为随性能漂移
+         （实测两次跑出 11/17 与 0/17）"归因于"每帧掷骰子的停顿判定"。
+         方向错了 —— 真正让它随机器快慢变化的是**初始化耗时决定了负 dt 的大小**。
+         归因错了，修法自然也错了，缺陷就一直留着。 */
+    const dt = Math.min(0.05, Math.max(0, (now - last) / 1000));
     last = now;
 
     /* 整帧合计的计数器：手动清零，让下面所有 render 累加在一起
@@ -934,6 +1117,10 @@ export function createGame3D(opts) {
 
     player.update(dt, keys, cam.yaw);
     cam.update(dt, player.pos);
+    /* 动态角色：人流/车流/动物。传 player.pos 是因为
+       车要避让玩家、蚊子会绕着人飞（见 actors.js 各 _upd*）。 */
+    actors.update(dt, player.pos);
+    updateNotices(dt);
 
     /* 主光跟随角色：**时段只决定方向，位置 = 玩家 + 方向 × 距离**。
        这样 ±40m 的阴影 frustum 始终罩住视野中心（跟人走），
@@ -1014,6 +1201,9 @@ export function createGame3D(opts) {
       const phWarm = typeof assets.warmPolyHaven === 'function'
         ? assets.warmPolyHaven(WARM_LIST_PH)
         : Promise.resolve(0);
+      const aiWarm = typeof assets.warmAi === 'function'
+        ? assets.warmAi(WARM_LIST_AI)
+        : Promise.resolve(0);
 
       /* ★ 每源各自完成时**立刻** pump 一次，而不是等 Promise.all。
          为什么（2026-09-18 实测缺陷）：
@@ -1035,6 +1225,10 @@ export function createGame3D(opts) {
       };
       kWarm.then((nk) => pumpNow('kenney', nk));
       phWarm.then((nph) => pumpNow('polyhaven', nph));
+      /* ★ AI 这批也分源 pump。它的单体最大（1.5 万~2.7 万三角面）、
+         最早可能的就绪时间最晚，若并进 Promise.all 会让
+         已经到位的 Kenney/Poly Haven 白等它。 */
+      aiWarm.then((nai) => pumpNow('ai', nai));
 
       /* ★ 再挂上收敛定时器兜底 —— 分源 pump 只管"某一批全到"那一刻，
          而 24 个请求是陆续到的，中间态必须靠定时器补齐。 */
@@ -1052,6 +1246,7 @@ export function createGame3D(opts) {
        每 250ms 对一张空表 pump 一次 —— 不致命，但属于资源泄漏，
        而且在"反复创建/销毁预览"的场景下会累积多个计时器。 */
     if (pumpTimer) { clearInterval(pumpTimer); pumpTimer = null; }
+    actors.dispose();
     disposeWorld(world);
     ro?.disconnect();
     window.removeEventListener('resize', resize);
@@ -1099,6 +1294,145 @@ export function createGame3D(opts) {
     setTimeSlot(slot) { applyTimeSlot(slot); applyNightLights(slot === "夜间", cam.cur); },
     /** 只读当前时段（验证脚本用） */
     get timeSlot() { return currentSlot; },
+
+    /* ── 3D 场景内提醒（替代 DOM toast）─────────────────────────────────
+       调用方只需给一句话；位置/上浮/淡出全由这里管。
+       用途：行动反馈、拒绝原因（"条件不满足"）、换地点、时段推进。
+       ★ 为什么不在这里拼 HTML：提示是**世界空间**的 sprite，
+         不是叠加在画布上的 DOM —— 两者渲染路径完全不同（见 notify 注释）。 */
+    notify: (text, opt) => notify(text, opt),
+
+    /* ── 动态角色运行态（验证脚本用）───────────────────────────────────
+       为什么要暴露计数：角色系统最典型的失败模式是**静默为空** ——
+       地点布局判断写错（比如把 avenue 写成 compound 分支），
+       街上就一个活物都没有，但画面照常渲染、不报任何错。
+       只有把"每种角色各几个"暴露出来，才断言得了"人流真的生成了"。 */
+    get actors() {
+      return {
+        counts: actors.stats,
+        layout: world ? world.stats.layout : null,
+        /* laneHalf 给验证脚本判"行人有没有贴到路沿外"用 ——
+           没有它就只能写死一个 4.75，换个地点就错。 */
+        layoutHalf: world ? (world.laneHalf || world.roadW / 2 || null) : null,
+        /* ★ 兜底必须与 actors.js::setWorld 同源（`w.laneHalf || roadW / 2`）——
+           否则护栏量的是"测试以为的路宽"，两处算法一漂移就假红/假绿。 */
+        /* 行为锚点数量：摊主/店主是否有岗位可站，靠它断言。 */
+        anchors: world && world.anchors ? world.anchors.length : 0,
+        /* 锚点收口的读数（见 world.js::Ctx.resolveAnchors）。
+           anchorStuck > 0 表示"有锚点被道具/建筑彻底堵死、让不开" ——
+           那需要改布局，而不是继续加大让位距离。 */
+        anchorPushed: world ? (world.anchorPushed || 0) : 0,
+        anchorStuck: world ? (world.anchorStuck || 0) : 0,
+        /* 车道走廊半宽 + "本次布局有几个采样区间因它被挖过"（见 road.js）。
+           corridorClamped 一直为 0 是个**好信号**：说明所有道具本来就落在
+           走廊之外；若它突然涨起来，说明有人又往路中间撒东西了。 */
+        corridor: world ? (world.corridor || 0) : 0,
+        carClearance: world ? (world.carClearance || 0) : 0,
+        corridorClamped: world ? (world.corridorClamped || 0) : 0,
+        /* place() 兜底的账目（见 world.js::Ctx.place）。
+           pushed 不一定是坏事（大垃圾箱本来就该靠边），
+           但 stuck > 0 意味着"这件东西根本放不进这条路"，是要改布局的信号。 */
+        corridorPushed: world ? (world.corridorPushed || 0) : 0,
+        corridorStuck: world ? (world.corridorStuck || 0) : 0,
+        /* 碰撞盒数量：穿模守卫的前置读数。
+           ★ 与 scene.userData.__colliders 是**同一个数组引用**（bridge 把
+             world.colliders 原样交给了 actors），所以这里为 0 就意味着
+             "守卫根本跑不起来"，而不是"这条街没有墙"——两者要能分开。 */
+        colliders: actors.colliders.length,
+        /* 出生解算账目（跨地点累积，见 actors.js 构造注）：
+           pushed = 生在盒里、被推到最近可站位置的人数；
+           stuck  = 推不动、保持原样的（>0 即布局有问题）。
+           ★ 没有这两个数，穿模守卫只能断言"眼下没人在盒里" ——
+             那句话在"这次根本没人生在盒里"时同样成立，是**假绿**。 */
+        pushedSpawns: actors.pushedSpawns,
+        stuckSpawns: actors.stuckSpawns,
+        /* 阴影 LOD 取舍：上一轮评估后仍投影 / 已停投影的人数，及参与记账的总数。
+           ★ 两个数都要报：只报"关掉了几个"的话，一个恒关（距离门算错，
+             全员不投影 → 街上没有影子）的实现也会显示"优化效果拔群"。 */
+        shadowOn: actors.shadowOnCount,
+        shadowOff: actors.shadowOffCount,
+        shadowTotal: actors.shadowTotal,
+      };
+    },
+
+    /* ── 出生解算自检口（**仅供验证脚本**，游戏逻辑不调用）──────────────
+       ★ 存在的理由：`pushedSpawns > 0` 依赖"这次真的有人生在盒里"，
+         而这件事随地点/随机种子变化 → 直接把守卫建在它上面会间歇假红。
+         这里让验证脚本**自己指定一个已知在盒内的点**，看解算给不给得出
+         干净落点。于是"机制是活的"与"数据恰好没触发"被彻底分开。
+       @returns {{blocked0:boolean, moved:boolean, blocked1:boolean, x:number, z:number}}
+         blocked0 起点是否在盒内（验证脚本应先确认它是 true，否则这个用例无意义）
+         moved    是否发生了位移
+         blocked1 落点是否仍在盒内（**正常必须为 false**） */
+    __probeSpawnResolve(x, z, r = 0.30) {
+      const o = new THREE.Object3D();
+      o.position.set(x, 0, z);
+      const blocked0 = actors._blocked(x, z, r);
+      /* 探针不得污染生产计数 —— 快照后还原。 */
+      const p0 = actors.pushedSpawns, s0 = actors.stuckSpawns;
+      let moved = false;
+      try { moved = actors._resolveSpawn(o, r); }
+      finally { actors.pushedSpawns = p0; actors.stuckSpawns = s0; }
+      return {
+        blocked0, moved,
+        blocked1: actors._blocked(o.position.x, o.position.z, r),
+        x: o.position.x, z: o.position.z,
+      };
+    },
+
+    /* ── ★ 碰撞判定对账探针（2026-09-19）──────────────────────────────────
+       为什么非要有它：穿模守卫（手写"点 ∩ 盒"）与角色系统的 `_blocked`
+       （走 8m 分格缓存）是**两套独立实现**。一旦它们对同一个点给出不同答案，
+       就会出现最坏的一种局面 —— 守卫说"他在墙里"，系统说"他没被挡住"，
+       于是 `_resolveSpawn` 什么也不做，缺陷永久留存，而两边看上去都"没错"。
+       这种分叉不报错、不崩，只能靠**对账**抓。
+       @returns {{sysBlocked:boolean, tags:string[]}} */
+    __probeBlocked(x, z, r = 0.30) {
+      const near = actors._nearColliders(x, z) || [];
+      const tags = [];
+      for (const c of near) {
+        if (x > c.minX - r && x < c.maxX + r && z > c.minZ - r && z < c.maxZ + r) {
+          tags.push(c.tag || 'untagged');
+        }
+      }
+      return { sysBlocked: actors._blocked(x, z, r), tags, near: near.length };
+    },
+
+    /* ── 阴影 LOD 开关（**仅供验证脚本**）───────────────────────────────
+       ★ 存在的理由：不把 LOD 关掉量一次，就永远只能说"改完是 359 次，
+         比记忆里的 442 少" —— 那既不是同一地点、也可能掺了别的改动，
+         属于**因果不清**。这里给出同一帧、同一地点的两个读数，
+         `无LOD - 有LOD` 就是这次优化确切的收益。
+       ★ 关掉时会**立即恢复全投影**，否则要等下一次评估才生效，
+         量到的还是旧状态。 */
+    __setShadowLod(enabled) {
+      actors.shadowLod = !!enabled;
+      if (!enabled) {
+        for (const a of actors.actors) {
+          const sp = a.obj.userData.__shadowParts;
+          if (!sp || !sp.length) continue;
+          for (let k = 0; k < sp.length; k++) sp[k].castShadow = true;
+          a._shadowOn = true;
+        }
+      }
+      return actors.shadowLod;
+    },
+
+    /* ── 命名 NPC（熟人在街上）─────────────────────────────────────────
+       ★ `namedIds` 与 `actors.counts` 是两个层次，都要有：
+         counts 只能回答"街上有没有人"，而这一族的意义在**是谁** ——
+         断言"下午的商业区有 9 个人"和断言"是日程表上那 9 个人"是两件事。
+         只做前者的话，随机撒 9 个匿名行人也照样能通过（假通过）。 */
+    get namedIds() { return actors.namedIds; },
+
+    /**
+     * 只换命名 NPC，不重建街道。
+     * ★ 为什么需要它：`state.player.timeSlot` 是**白天实时变化**的
+     *   （main.js:5498-5500，随行动力消耗切换），名单跟着变。
+     *   若为此重走 loadLocation()，整条街的行人/车流/猫狗会在玩家眼前重置 ——
+     *   人物瞬移、车流归零，那一眼就是 bug。见 actors.js::setNamedNpcs。
+     */
+    setNamedNpcs: (list) => actors.setNamedNpcs(list),
     /* ── 外部资产运行态（Kenney + Poly Haven，均 CC0）────────────────────
        给验证脚本断言"GLB 真的被加载/替换了"，也给调试面板看失败原因。
        只读快照，不暴露 cache 内部对象。
@@ -1133,6 +1467,14 @@ export function createGame3D(opts) {
     get hotspot() { return focused; },
     get hotspots() { return world ? world.hotspots : []; },
     get playerPos() { return { x: player.pos.x, z: player.pos.z }; },
+    /* 机位。取证截图脚本靠它把待拍的东西摆到"相机那一侧的对面"并对准镜头 ——
+       不知道相机在哪一侧就只能靠猜（本项目已经吃过一次"猜方向"的亏）。 */
+    get cameraPos() {
+      return { x: camera.position.x, y: camera.position.y, z: camera.position.z };
+    },
+    /* 当前挂在场景里的提醒条数量。★ 验证脚本要用它区分
+       「提醒已显示」和「提醒函数被调了但没有载体」（后者是静默丢消息）。 */
+    get notices() { return notices.length; },
     get stats() {
       return {
         fps,

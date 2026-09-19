@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import {
   signTex, makeWindow, makeACUnit, metalPanelTex, concreteTex, roofTex,
-  fitRepeat, surfaceMat as surf, TILE_M,
+  fitRepeat, surfaceMat as surf, TILE_M, SIGN_STYLES,
 } from './materials.js';
 import { palette, tierOf } from './palette.js';
+import { rng } from './rng.js';
 
 /* ══ 建筑与道具工具箱 ═══════════════════════════════════════════════════════
    29 个地点的全部可见物都从这里取。每个工厂都接收 tier（财富档位）并自己
@@ -12,10 +13,12 @@ import { palette, tierOf } from './palette.js';
    约定：每个建筑 Group 都写 userData.footprint = {w,d,h}，用于生成碰撞盒。
    ═══════════════════════════════════════════════════════════════════════════ */
 
-const rnd = (a, b) => a + Math.random() * (b - a);
+/* ★ 走 world.js 播种的同一条流（见 rng.js）：道具的"货物个数/颜色/朝向"
+   也属于布局的一部分，必须跟着地点确定性，否则同一个摊位每次进去货都不一样。 */
+const rnd = (a, b) => a + rng() * (b - a);
 const rndInt = (a, b) => Math.floor(rnd(a, b + 1));
-const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-const chance = (p) => Math.random() < p;
+const pick = (arr) => arr[Math.floor(rng() * arr.length)];
+const chance = (p) => rng() < p;
 
 /* ── P3-3 几何倒角 ──────────────────────────────────────────────────────
    ★ 为什么需要：真实建筑的转角**没有一个是 90° 的硬边**。
@@ -463,9 +466,15 @@ export function fireEscapeProp() {
   return phProp('fire-escape', null, { footprint: { w: 2.4, d: 1.2, h: 6.466 } });
 }
 
-/** 高压电线杆（structure）—— 10m 高，带横担与绝缘子，比程序化圆杆可信得多。 */
+/** 高压电线杆（structure）—— 10m 高，带横担与绝缘子，比程序化圆杆可信得多。
+ *  ★ footprint 用**地面截面**，不用全包围盒（2026-09-19）。
+ *    原来写 {w:2.4,d:1.2} —— 那是含 9m 高横担的外接尺寸。后果两样：
+ *      ① 转过角度后包围盒半宽 1.32m，一根"杆"在街上占了 2.6m 宽；
+ *      ② 与本文件设计表自己写的"电线杆 ±0.28"矛盾（差 4 倍），
+ *         行人带（2.20~2.55）被它压掉一截。
+ *    碰撞盒只需表达"地面这一圈挡不挡得住人"，横担在头顶 9m，与走路无关。 */
 export function powerPoleProp() {
-  return phProp('electricity-poles', null, { footprint: { w: 2.4, d: 1.2, h: 10.039 } });
+  return phProp('electricity-poles', null, { footprint: { w: 0.6, d: 0.6, h: 10.039 } });
 }
 
 /** 铁丝网围栏（structure）—— 3.5m 高，工地/厂区/废地的边界。 */
@@ -490,13 +499,148 @@ export function factoryFacadeProp() {
 }
 
 
+/* ══════════════════════════════════════════════════════════════════════════
+   AI 生成资产（腾讯混元 3D）—— 2026-09-19 接入
+
+   ── 为什么需要第三个源 ──────────────────────────────────────────────────
+   前两个源都是**欧美城市**素材：Kenney 是低多边形西式城市套件（烟囱、太阳能
+   板、风车、摩天楼、集装箱），Poly Haven 是欧洲写实建筑细节（落水管、卷帘门、
+   消防梯、公寓立面）。合起来 186 个模型里，**中国城中村的元素是零**。
+   所以场景"不像中国"不是精度问题，是**题材错配** —— 加再多面数也救不回来。
+
+   这一组专补"一眼中国南方"的标志物：骑楼、大排档、防盗网居民楼、菜市场摊、
+   岭南庙宇。选件标准只有一条：**把模型从画面里拿掉，这个地点还认得出来吗？**
+   （认得出 → 是普通填充，不值得花 AI 的算力；认不出 → 才是 hero。）
+
+   ── 三条使用纪律（接入前必读）────────────────────────────────────────
+    ① **单位是米（×1），但不是天生的。**
+       混元直出的是"外接球归一化"的模型 —— 物理尺寸**未知**，乘几都是错的。
+       上游 prep_glb.py 已按目标真实高度把尺寸烘焙进顶点，故到这里就是米制。
+       ⚠️ 把**未经处理**的原始 GLB 直接丢进 src/assets/ai/，会得到
+       "1.22 米高的骑楼"—— 极小、且不报错，正是本项目最忌讳的静默失败。
+       流水线见 scripts/ai-asset-pipeline.cjs。
+
+    ② **面数远高于前两个源**：单个 1.5 万~2.7 万三角面（Kenney 同类的百倍级）。
+       故只做 hero —— 每地点 2~6 个，**绝不铺满**。铺满会同时压垮
+       draw call 与顶点量，而画面收益递减。
+
+    ③ **兜底必须是程序化建筑。** AI 模型是"替换件"不是唯一形态：
+       加载失败时退回 lowRise / tower，画面依然完整。这是 glbProp 的既有契约，
+       在这里尤其重要 —— 建筑是画面的主体，空一栋就是穿帮。
+   ═════════════════════════════════════════════════════════════════════════ */
+
+/** AI 资产分组（对应 src/assets/ai/<组>/<名>.glb） */
+export const AI_GROUP = { HERO: 'hero', STALL: 'stall' };
+
+/** AI 通用取件。group 见 AI_GROUP；name 见 ai-manifest.json。 */
+function aiProp(group, name, fallback, opt = {}) {
+  return glbProp(group, name, fallback, { ...opt, source: 'ai' });
+}
+
+/** 岭南骑楼商铺（hero）—— 三层商住楼，底层内凹柱廊。
+ *
+ *  实测（prep 后）：7.26m 宽 × 10.0m 高 × 6.49m 深。
+ *  ★ 为什么它是全项目最值钱的一件：柱廊 + 卷帘门 + 防盗网三层信息叠在一起，
+ *    正是"华南老城"的视觉签名。程序化几何拼不出内凹柱廊（那要布尔运算），
+ *    而这恰恰是骑楼之所以是骑楼的唯一特征。
+ *  ★ footprint 必须与模型真实尺寸一致 —— 建筑走 ctx.place({block:true}),
+ *    碰撞盒由 footprint 生成；写小了角色会穿进墙里，写大了街上走不通。 */
+export function qilouProp({ tier = 2, w = 7.3, d = 6.5, floors = 3 } = {}) {
+  return aiProp(AI_GROUP.HERO, 'qilou',
+    () => lowRise({ w, d, floors, tier }),
+    { footprint: { w, d, h: 10 } });
+}
+
+/** 老式居民楼（hero）—— 六层，满墙防盗网 + 空调外机 + 晾衣杆。
+ *
+ *  ★ 这是**体量最大**的一件，它决定城中村的天际线。
+ *    前两件（骑楼/大排档）管近景的"人味"，这一件管远景的"密度感" ——
+ *    城中村之所以一眼可辨，靠的正是"每扇窗都焊了铁笼"这种**重复的杂乱**。
+ *    而这种重复恰恰是程序化最不擅长的（程序化会做得太整齐）。 */
+export function oldApartmentProp({ tier = 2, w = 8, d = 7, floors = 6 } = {}) {
+  return aiProp(AI_GROUP.HERO, 'old_apartment',
+    () => lowRise({ w, d, floors, tier }),
+    { footprint: { w, d, h: 18 } });
+}
+
+/** 岭南庙宇 / 祠堂（hero）—— 镬耳山墙 + 硬山顶 + 石狮。
+ *
+ *  ★ 只在 temple 用。它是全套里**唯一带"宗族"语义**的件：
+ *    城中村的空间秩序（祠堂居中、榕树在旁）是华南村落的社会结构物证，
+ *    少了它，寺庙地点就只是个"有屋顶的房子"。 */
+export function lingnanTempleProp({ tier = 1, w = 11, d = 9 } = {}) {
+  return aiProp(AI_GROUP.HERO, 'lingnan_temple',
+    () => lowRise({ w, d, floors: 2, tier }),
+    { footprint: { w, d, h: 7.5 } });
+}
+
+/** 街边大排档（stall）—— 遮阳篷 + 不锈钢灶台 + 折叠圆桌 + 红塑料凳。
+ *
+ *  实测（prep 后）：2.88m 宽 × 2.40m 高 × 2.63m 深。
+ *  ★ 放在夜市/城中村的**路边**（propsFor），不参与建筑行 ——
+ *    它是"人留下的痕迹"，必须贴着人走的地方，不能站在楼线里。 */
+export function dapaidangProp() {
+  return aiProp(AI_GROUP.STALL, 'dapaidang', null,
+    { footprint: { w: 2.88, d: 2.63, h: 2.4 } });
+}
+
+/** 菜市场蔬菜摊（stall）—— 条纹防雨篷 + 塑料菜筐 + 手写价牌 + 电子秤。
+ *
+ *  ★ 与 kenney 的 parasol（遮阳伞）**不是替代关系**：伞是"休闲"语义，
+ *    条纹篷布 + 堆叠菜筐是"营生"语义。菜市场地点缺的正是后者。 */
+export function marketStallProp() {
+  return aiProp(AI_GROUP.STALL, 'market_stall', null,
+    { footprint: { w: 2.6, d: 2.2, h: 2.3 } });
+}
+
+/** 有哪些 AI hero 件可用（供 world.js 按地点挑选，也是验证脚本的枚举口径）。 */
+export const AI_HEROES = ['qilou', 'old_apartment', 'lingnan_temple'];
+
+
+/* ── 招牌配色：按店名**确定性**分配 ───────────────────────────────────────
+   为什么按店名而不是随机数：招牌有缓存（_signCache），若每调用一次就随机
+   取色，同一家店在不同位置会开出不同颜色的招牌 —— 反而更假。按店名做散列
+   取色，保证「同一个名字永远同一个颜色、不同名字颜色尽量分散」。
+
+   为什么需要这件事：改造前 signMat() 的调用方没有传 opt，于是全部招牌都用
+   signTex 的默认色（暗红底米白字）—— 一条街几十家店同一个颜色，
+   这是"千篇一律"最直接的来源（另一处是店名池太小，见 world.js）。 */
+
+/** FNV-1a：短字符串散列，够用且无依赖 */
+function hash32(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+/** 按 key（店名）取一套招牌配色 */
+export function styleFor(key) {
+  return SIGN_STYLES[hash32(String(key)) % SIGN_STYLES.length];
+}
+
 /* ── 招牌材质缓存：同文只画一次 canvas ─────────────────────────────────── */
 const _signCache = new Map();
 function signMat(text, opt = {}) {
   const key = text + JSON.stringify(opt);
   if (_signCache.has(key)) return _signCache.get(key);
-  const m = new THREE.MeshStandardMaterial({ map: signTex(text, opt), roughness: 0.85 });
+  /* 调用方未指定配色 → 按店名自动分配（老调用点不改也即获得分散配色） */
+  const o = (opt.style || opt.bg) ? opt : { ...opt, style: styleFor(text) };
+  const m = new THREE.MeshStandardMaterial({ map: signTex(text, o), roughness: 0.85 });
   _signCache.set(key, m);
+  return m;
+}
+
+/** 招牌盒体（招牌的"厚度"）用同款底色 —— 否则从侧面看会露出一条
+    不属于该招牌的杂色。按底色缓存，避免每个店 new 一个材质。 */
+const _signBoxCache = new Map();
+function signBoxMat(style) {
+  const key = style.bg;
+  if (_signBoxCache.has(key)) return _signBoxCache.get(key);
+  const m = new THREE.MeshStandardMaterial({ color: style.bg, roughness: 0.85 });
+  _signBoxCache.set(key, m);
   return m;
 }
 
@@ -811,8 +955,11 @@ export function shopUnit({ width = 5, sign = '小卖部', tier = 2, height = 3.4
   g.add(awning);
 
   // 招牌
+  /* 配色按店名分配（styleFor）：盒体用同款底色，贴图用同套配色 ——
+     改造前这里用 T.accent 固定色，全街招牌呈现为同一个颜色。 */
+  const st = styleFor(sign);
   const signBox = new THREE.Mesh(new THREE.BoxGeometry(width * 0.96, 0.8, 0.18),
-    signColor ? new THREE.MeshStandardMaterial({ color: signColor, roughness: 0.85 }) : T.accent);
+    signColor ? new THREE.MeshStandardMaterial({ color: signColor, roughness: 0.85 }) : signBoxMat(st));
   signBox.position.set(0, height * 0.98, 0.06);
   g.add(signBox);
   const signPl = new THREE.Mesh(new THREE.PlaneGeometry(width * 0.92, 0.72), signMat(sign));
@@ -1053,7 +1200,7 @@ export function stall({ w = 2.4, d = 1.2, tier = 2, colors = null, goods = true,
     for (let i = 0; i < n; i++) {
       const gw = rnd(0.18, 0.34), gh = rnd(0.12, 0.3);
       const item = new THREE.Mesh(
-        Math.random() < 0.5 ? new THREE.BoxGeometry(gw, gh, gw * 0.8) : new THREE.CylinderGeometry(gw * 0.4, gw * 0.42, gh, 8),
+        rng() < 0.5 ? new THREE.BoxGeometry(gw, gh, gw * 0.8) : new THREE.CylinderGeometry(gw * 0.4, gw * 0.42, gh, 8),
         new THREE.MeshStandardMaterial({ color: pick([0x6a7a4a, 0x8a6a3a, 0x7a5a4a, 0x5a6a6a, 0x8a8a5a, 0xa08a5a]), roughness: 0.9 }));
       item.position.set(rnd(-cw / 2 + 0.3, cw / 2 - 0.3), 0.97 + gh / 2, rnd(-cd / 2 + 0.25, cd / 2 - 0.25));
       item.castShadow = true;
