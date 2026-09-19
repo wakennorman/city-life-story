@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {
   surfaceMat, tileWallTex, concreteTex, roofTex, glassTex, brickTex, metalPanelTex,
-  curtainWallTex, asphaltTex, paverTex, grassTex, stoneTex, woodTex,
+  curtainWallTex, asphaltTex, paverTex, grassTex, stoneTex, woodTex, slabTex,
 } from './materials.js';
 
 /* ── 质感档位（wealthTier）────────────────────────────────────────────────
@@ -74,10 +74,18 @@ export function buildPalette() {
 
   /* 院内地面。★ [静默失效修复] 三档原来全是 512 的水泥（tier3 是铺装），
      而 world.js 的很多地块走的是 tier 默认值 → 富裕区院子还是脏水泥。
-     现在按档拉开：tier1 巷弄水泥 / tier2 干净水泥 / tier3 石材铺装。 */
+     现在按档拉开：tier1 脏板材 / tier2 干净板材 / tier3 石材铺装。
+
+     ★ [2026-09-19 对齐《大多数》] 三档的**结构**换了：
+       原来 tier1/tier2 用的是 concreteTex —— 那是**给墙面**的贴图，
+       22 条裂缝按 2.4m 平铺，在 190m 的地面上铺出一片规律重复的龟裂纹。
+       实机画面里这是最"一眼假"的一处。现改用 slabTex（约 0.9m 见方的大板材，
+       板缝清晰、板间有明度差），与《大多数》的地面结构一致。
+       底色也一并**往暖里挪**：原来 '#6c6f66' 是偏绿的冷灰，
+       而城中村的水泥地是暖灰（3D_ART_SPEC §1.5：脏、旧、暖灰）。 */
   const groundFor = (tier) => {
-    if (tier <= 1) return surf(concreteTex({ base: '#6c6f66', wet: 0.4, crack: 22 }), { roughness: 0.95 });
-    if (tier === 2) return surf(concreteTex({ base: '#7d7f76', wet: 0.28, crack: 14 }), { roughness: 0.93 });
+    if (tier <= 1) return surf(slabTex({ base: '#78756a', slabMM: 900, stain: 9 }), { roughness: 0.95 });
+    if (tier === 2) return surf(slabTex({ base: '#8a877e', slabMM: 1000, stain: 4 }), { roughness: 0.93 });
     return surf(stoneTex({ base: '#a8a49b', slabMM: 1200 }), { roughness: 0.74 });
   };
 
@@ -119,8 +127,12 @@ export function buildPalette() {
          不报错、不崩溃、就是不对 —— 典型的静默失效。此处补上，与 tier1 的 trim 同色。 */
       trim: new THREE.MeshStandardMaterial({ color: 0x9a9186, roughness: 0.90 }),
       tarp: new THREE.MeshStandardMaterial({ color: 0x3f4a44, roughness: 0.96, side: THREE.DoubleSide }),
-      /* 巷弄路面：比沥青浅、比院内地面脏，带油渍 —— 城中村的巷子不是柏油马路 */
-      laneSurf: surf(concreteTex({ base: '#75786f', wet: 0.5, crack: 26 }), { roughness: 0.97 }),
+      /* 巷弄路面：比沥青浅、比院内地面脏，带油渍 —— 城中村的巷子不是柏油马路。
+         ★ 2026-09-19 同样换成 slabTex：巷弄是**水泥板路**（不是柏油路），
+           板格比院子小一档（800mm），脏污更重 —— 与《大多数》的巷子一致。
+           原来这里的 crack:26 是全项目最密的一处，正是截图里那道
+           横贯整条街的重复裂纹的来源。 */
+      laneSurf: surf(slabTex({ base: '#6e7069', slabMM: 800, stain: 12, crack: 3 }), { roughness: 0.97 }),
       signRed: null,   // 由招牌纹理按需生成
       cloth: [0x5b6b7a, 0x8a8078, 0x6d5f66, 0x7a8a72, 0x9a9a92].map(
         c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.95, side: THREE.DoubleSide })),

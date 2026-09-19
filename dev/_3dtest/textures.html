@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8">
+<title>程序化贴图接触表</title>
+<style>
+  body{margin:0;background:#1b1b1b;font:11px ui-monospace,Consolas,monospace;color:#ddd}
+  #row{display:flex;flex-wrap:wrap;gap:10px;padding:10px;align-items:flex-start}
+  .cell{text-align:center}
+  .cell canvas{display:block;border:1px solid #444;background:#000}
+  .cap{padding:3px 0;white-space:nowrap}
+</style>
+</head>
+<body>
+<div id="row"></div>
+<script type="importmap">
+{ "imports": { "three": "/node_modules/three/build/three.module.js" } }
+</script>
+<script type="module">
+import * as M from '/src/app/3d/materials.js';
+
+/* 要看的贴图清单：名字 → 工厂调用。
+   只列**地面与立面**这两类 —— 它们占了屏幕面积的绝大部分，
+   是"一眼假"的主要来源；道具类贴图（招牌/海报/卷帘门）尺寸小，单看意义不大。 */
+const CASES = [
+  ['ground.tier1_slab900', () => M.slabTex({ base:'#78756a', slabMM:900, stain:9 })],
+  ['ground.tier2_slab1000', () => M.slabTex({ base:'#8a877e', slabMM:1000, stain:4 })],
+  ['ground.tier3_stone',   () => M.stoneTex({ base:'#a8a49b', slabMM:1200 })],
+  ['ground.lane_slab800',  () => M.slabTex({ base:'#6e7069', slabMM:800, stain:12, crack:3 })],
+  ['ground.asphalt',       () => M.asphaltTex()],
+  ['ground.paver',         () => M.paverTex()],
+  ['ground.grass',         () => M.grassTex()],
+  ['wall.tile',            () => M.tileWallTex()],
+  ['wall.brick',           () => M.brickTex()],
+  ['wall.concrete',        () => M.concreteTex()],
+  ['wall.curtain',         () => M.curtainWallTex()],
+  ['wall.metalPanel',      () => M.metalPanelTex()],
+];
+
+const row = document.getElementById('row');
+const timings = [];
+/* 原生分辨率的贴图，供脚本落盘 —— 缩略图会把板缝（2~3px）糊掉，
+   而"缝清不清楚"正是地面像不像铺装的关键，必须看原始像素。 */
+const full = {};
+for (const [name, make] of CASES) {
+  let tex;
+  /* ★ 计时：materials.js 的 normalFromHeight 是**逐像素 Sobel**，
+     EXT(1024²) 一张就是 100 万次循环。贴图是在首次进入 3D 时同步生成的，
+     这里超标会直接变成"进场景卡一下"。必须看得见。 */
+  const t0 = performance.now();
+  try { tex = make(); } catch (e) { console.warn('生成失败', name, e.message); continue; }
+  const ms = performance.now() - t0;
+  timings.push({ name, ms, px: tex.image.width });
+
+  const nc = document.createElement('canvas');
+  nc.width = nc.height = tex.image.width;
+  nc.getContext('2d').drawImage(tex.image, 0, 0);
+  full[name] = nc.toDataURL('image/png');
+
+  const c = document.createElement('canvas');
+  c.width = c.height = 384;
+  c.dataset.name = name;
+  const g = c.getContext('2d');
+  g.drawImage(tex.image, 0, 0, 384, 384);
+  const cell = document.createElement('div');
+  cell.className = 'cell';
+  const cap = document.createElement('div');
+  cap.className = 'cap';
+  cap.textContent = `${name}  ${tex.image.width}px  ${ms.toFixed(0)}ms`;
+  cell.appendChild(cap); cell.appendChild(c);
+  row.appendChild(cell);
+}
+window.__texFull = full;
+window.__texTimings = timings;
+window.__texSheetDone = true;
+</script>
+</body></html>

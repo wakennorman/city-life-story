@@ -83,15 +83,32 @@ function canvas(w = NOISE, h = w) {
       而逐行看代码全都对。" —— 所以宁可多留读数，也不要靠反复调参数去猜。 */
 const _surfaces = [];
 let _normalCount = 0;
+/* 平面标识物：本来就是平的、不该有凹凸 —— 覆盖率统计要排除它们。
+   ★ 下面这份名单是**单一真源**：验证脚本必须消费 `normalCoverage` 读数，
+     不要自己再抄一份。2026-09-19 踩过 —— 脚本侧抄了一份旧名单，
+     新增三个平面 kind 后源码侧已 100%、脚本侧却报 81/103 假红。 */
+const PLANAR_KINDS = ['sign', 'glass', 'poster', 'flyer', 'banner'];
+
 const _matDebug = {
   tileM: TILE_M, ext: EXT, noise: NOISE,
   surfaces: _surfaces,
   get normalMapsBuilt() { return _normalCount; },
+  /** 法线贴图覆盖率：非平面类表面中，有高度图（= 能生成法线）的比例。
+      必须用 getter —— `_surfaces` 随世界构建持续增长，快照会过期。
+      ★ 挂在这里而不是只写在 materialDebug() 里：验证脚本读的是
+        `window.__matDebug`，函数返回值它拿不到。 */
+  get normalCoverage() {
+    const shouldn = _surfaces.filter((s) => !PLANAR_KINDS.includes(s.kind));
+    return {
+      expected: shouldn.length,
+      withHeight: shouldn.filter((s) => s.hasHeight).length,
+    };
+  },
 };
 if (typeof window !== 'undefined') window.__matDebug = _matDebug;
 
 /* 供 world.js 占位引用 —— 该文件 `palette().common.stone` 被当成院子水泥地底用了 */
-export const groundKinds = ['concrete', 'asphalt', 'paver', 'stone', 'grass'];
+export const groundKinds = ['concrete', 'asphalt', 'paver', 'stone', 'grass', 'slab'];
 
 function toTexture(c, opt = {}) {
   const {
@@ -431,6 +448,169 @@ export function concreteTex(opt = {}) {
   return toTexture(c, { kind: 'concrete', normalScale: 0.5, height: hc, metersPerRepeat });
 }
 
+/* 大块水泥板 / 石板地面 —— 对齐《大多数》的地面。
+   [2026-09-19] 为什么要新增一种，而不是调 concreteTex 的参数：
+
+     ① concreteTex 是**给墙面**设计的 —— 裂缝是墙的特征，不是地面的。
+        拿它铺地面时，22 条裂缝按 2.4m 平铺 → 每 2.4m 重复一簇裂纹，
+        在 190m 的地面上就是一片**规律重复的龟裂纹**，一眼假。
+        （实测证据：角色取证截图 1-street-lane-day.png 里，整条街的
+          X 形裂纹在屏幕上整齐地重复了十几遍。）
+     ② 参照《大多数》的实机画面，它的地面是**约 1m 见方的大板材**：
+        板缝清晰、板与板之间有明度差、偶有水渍油渍 —— 几乎没有裂缝。
+
+     所以这是一次「换成对的结构」，不是调参。
+
+   ★ 板缝必须是**清晰的直线网格**。人眼正是靠这个网格读出地面的尺度与远近；
+     板缝一糊，地面就变成"一大片灰"，空间关系整个塌掉 ——
+     这比"纹理不好看"严重得多。 */
+export function slabTex(opt = {}) {
+  const {
+    base = '#7b786e', slabMM = 900, jointMM = 14,
+    metersPerRepeat = GROUND_TILE_M, stain = 6, tone = 0.11, crack = 2,
+  } = opt;
+  const N = EXT;
+  const n = gridCount(slabMM, N, false, metersPerRepeat);
+  const cell = N / n;
+  const joint = Math.max(2, px(jointMM, N, metersPerRepeat));
+
+  const c = canvas(N), ctx = c.getContext('2d');
+  const hc = canvas(N), hctx = hc.getContext('2d');
+
+  // 高度图：板面平（凸），板缝凹下去
+  hctx.fillStyle = '#dedede'; hctx.fillRect(0, 0, N, N);
+
+  ctx.fillStyle = base; ctx.fillRect(0, 0, N, N);
+
+  /* ① 每块板一个独立的明度 —— 真实水泥板没有两块是同一个色。
+        ★ 这是"看起来像铺装"而不是"一块印了格子的布"的关键。
+
+        ★★ 幅度与分布**都**要对（这一条踩过坑，别退回去）：
+           第一版写成 `d = (Math.random()-0.5)*tone`，tone=0.16，再乘 1.7
+           放大 —— 相邻两块板可以一个 -17% 一个 +17%，平铺出来是**棋盘格**，
+           而且是"拼贴花砖"那种棋盘格，比原来的裂纹更假。
+           实测证据：dev/_3dtest/slabtex-probe.png（三块贴图并排看），
+           以及角色取证截图 1-street-lane-day.png 的地面。
+
+           对照《大多数》实机（ss3.jpg 人行道）：相邻板只差 3~5%，
+           大多数板**接近同一个底色**，只有少数几块明显偏深/偏浅。
+           所以这里用 pow(2.2) 把分布压成"绝大多数接近 0、少数拉开"，
+           并且 alpha 不再额外放大。tone 是**上限**，不是典型值。 */
+  for (let r = 0; r < n; r++) {
+    for (let q = 0; q < n; q++) {
+      const t = (Math.random() - 0.5) * 2;                       // -1..1
+      const d = Math.sign(t) * Math.pow(Math.abs(t), 2.2) * tone; // 偏向 0
+      ctx.fillStyle = d > 0 ? `rgba(255,255,255,${d})` : `rgba(0,0,0,${-d})`;
+      ctx.fillRect(q * cell, r * cell, cell, cell);
+    }
+  }
+
+  /* ② 板缝。
+        ★ 先铺一条**更宽的暗晕**再压清晰的缝线：真实的缝里积灰，
+          缝两侧各有一条 5~8mm 的过渡带。没有这条晕，缝就只是
+          "用尺子画上去的直线"，板面像一整块贴纸。 */
+  const vline = (x, w, color, tgt) => {
+    tgt.fillStyle = color;
+    for (const dx of [-N, 0, N]) tgt.fillRect(x + dx - w / 2, 0, w, N);
+  };
+  const hline = (y, w, color, tgt) => {
+    tgt.fillStyle = color;
+    for (const dy of [-N, 0, N]) tgt.fillRect(0, y + dy - w / 2, N, w);
+  };
+  const halo = Math.max(joint * 3, 4);
+  for (let i = 0; i < n; i++) {
+    vline(i * cell, halo, 'rgba(40,42,38,0.10)', ctx);
+    hline(i * cell, halo, 'rgba(40,42,38,0.10)', ctx);
+  }
+
+  /* ★ 必须画三遍（x-N / x / x+N）——
+        纹理是 RepeatWrapping，只在 x=0 画一次的话左边缘那条缝
+        只有一半宽度，接缝处会出现一道**粗细不均的缝**。 */
+  for (let i = 0; i < n; i++) {
+    vline(i * cell, joint, 'rgba(36,38,34,0.44)', ctx);
+    vline(i * cell, joint, '#565656', hctx);
+    hline(i * cell, joint, 'rgba(36,38,34,0.44)', ctx);
+    hline(i * cell, joint, '#565656', hctx);
+    /* 缝的受光侧提亮一线 —— 板边被磨圆的倒角会捕到一条细高光，
+       没有它，缝就只是"画上去的两条黑线"。 */
+    vline(i * cell + joint * 0.75, 2, 'rgba(255,255,255,0.10)', ctx);
+    hline(i * cell + joint * 0.75, 2, 'rgba(255,255,255,0.10)', ctx);
+  }
+
+  /* ③ 水渍 / 油渍：**少而大**。多而小会变成"麻子"。
+        集中在少数几块板上，位置随机但块内连续 —— 这才像渗出来的。 */
+  for (let i = 0; i < stain; i++) {
+    const q = (Math.random() * n) | 0, r = (Math.random() * n) | 0;
+    const x = (q + 0.5) * cell + (Math.random() - 0.5) * cell * 0.6;
+    const y = (r + 0.5) * cell + (Math.random() - 0.5) * cell * 0.6;
+    /* ★ 七成是深渍（油/水），三成是浅渍（浮灰/水泥浆）。
+       全画深的会让地面越铺越黑，而且一眼能看出"只有一种斑"。 */
+    const light = Math.random() < 0.3;
+    const a = 0.10 + Math.random() * 0.14;
+    const g = ctx.createRadialGradient(x, y, 2, x, y, cell * (0.5 + Math.random() * 0.8));
+    g.addColorStop(0, light ? `rgba(226,226,220,${a * 0.8})` : `rgba(40,44,42,${a})`);
+    g.addColorStop(1, light ? 'rgba(226,226,220,0)' : 'rgba(40,44,42,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, cell * 1.4, 0, Math.PI * 2); ctx.fill();
+  }
+
+  /* ③-b 低频大块脏污 —— **这一层才是"像被人踩过的地"的关键**。
+        ★ 量化依据（scripts/_diag-slabstat.cjs）：
+          参考《大多数》ss3.jpg 里，**连没有板的沥青马路**块级
+          离散度 CV 都有 7.5%，而我们带板的地面只有 5.4%。
+          说明它地面的"信息量"主要来自脏污与杂物，不是板间色差。
+          所以补脏，而不是继续加大板间色差（那只会得到棋盘格）。 */
+  for (let i = 0; i < Math.max(3, n); i++) {
+    const x = Math.random() * N, y = Math.random() * N;
+    const rad = cell * (1.2 + Math.random() * 2.0);
+    const light = Math.random() < 0.35;
+    const a = 0.035 + Math.random() * 0.055;
+    const g = ctx.createRadialGradient(x, y, rad * 0.15, x, y, rad);
+    g.addColorStop(0, light ? `rgba(232,230,222,${a})` : `rgba(46,48,44,${a})`);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, rad, 0, Math.PI * 2); ctx.fill();
+  }
+
+  /* ③-c 沙砾 / 碎屑。★ 必须**很细很淡**：颗粒一大就变成"麻子脸"，
+       比没有还难看。直径 1~2px（≈1~2cm）· alpha ≤0.16。 */
+  for (let i = 0; i < 260; i++) {
+    const x = Math.random() * N, y = Math.random() * N;
+    const s = 0.7 + Math.random() * 1.4;
+    const light = Math.random() < 0.45;
+    ctx.fillStyle = light
+      ? `rgba(236,234,226,${0.05 + Math.random() * 0.10})`
+      : `rgba(38,40,36,${0.05 + Math.random() * 0.11})`;
+    ctx.fillRect(x, y, s, s);
+  }
+
+  /* ④ 裂缝：0~2 条，且**必须落在同一块板内**。
+        跨板的裂缝会在平铺时被切断成一条条短线（因为裂缝不会跟着 tile 走），
+        看起来像"地上有一排断掉的短线"，比没有裂缝更假。 */
+  for (let i = 0; i < crack; i++) {
+    const q = (Math.random() * n) | 0, r = (Math.random() * n) | 0;
+    let x = (q + 0.3) * cell, y = (r + 0.3) * cell;
+    ctx.strokeStyle = 'rgba(30,32,30,0.42)';
+    hctx.strokeStyle = '#4a4a4a';
+    ctx.lineWidth = 1 + Math.random() * 0.8;
+    hctx.lineWidth = ctx.lineWidth + 0.8;
+    ctx.beginPath(); hctx.beginPath();
+    ctx.moveTo(x, y); hctx.moveTo(x, y);
+    for (let s = 0; s < 4; s++) {
+      x += (Math.random() - 0.5) * cell * 0.28;
+      y += (Math.random() - 0.5) * cell * 0.28;
+      x = Math.min((q + 1) * cell - 2, Math.max(q * cell + 2, x));
+      y = Math.min((r + 1) * cell - 2, Math.max(r * cell + 2, y));
+      ctx.lineTo(x, y); hctx.lineTo(x, y);
+    }
+    ctx.stroke(); hctx.stroke();
+  }
+
+  grain(ctx, N, N, 20);
+  grain(hctx, N, N, 12);
+  return toTexture(c, { kind: 'slab', normalScale: 0.55, height: hc, metersPerRepeat });
+}
+
 /* 卷帘门：横向条纹。真实帘片节距约 75mm。 */
 export function shutterTex() {
   const N = NOISE;
@@ -458,21 +638,237 @@ export function shutterTex() {
   return toTexture(c, { kind: 'shutter', normalScale: 0.7, height: hc });
 }
 
-/* 招牌：红底白字。平面标识物，不需要法线（贴纸本来就是平的）。 */
+/* ══ 内容层：招牌 / 海报 / 横幅 / 牛皮癣 ══════════════════════════════════
+   [2026-09-19] 目标：解决"一条街的招牌、门脸全一个样"。
+
+   根因有两处，**都不是贴图能力问题**：
+     ① **配色只有一个**。signTex 的默认色（暗红底米白字）是全项目唯一的
+        招牌配色，而 kit.js 的 signMat() 调用时又没传 opt —— 于是街上
+        所有招牌都是同一个颜色。真实街头是"几套标准印刷色"的组合。
+     ② **店名池太小**。SHOP_NAMES 每类只有 3~8 个固定名，一条街几十家店
+        必然反复出现同一个名字。改用「前缀 × 主体」组合（见 world.js）。
+
+   另补三类街头密度最高的"内容"：
+     posterTex  海报 / 灯箱广告   —— 墙面上成片的彩色块
+     flyerTex   牛皮癣小广告       —— 白纸黑字 + 电话号码
+     bannerTex  横幅标语           —— 红底黄字，横跨门脸
+   这三样是"有没有生活气"的分水岭：几何再准，缺了它们街面就是空的。
+
+   ★ 为什么不去找真实照片贴图：低模城市里，海报在屏幕上的高度往往只有
+     二三十像素，**视觉上它就是"饱和色块 + 大字 + 数字"**。用几何色块合成
+     成本为零、无授权风险、可无限变体；换成照片反而要处理分辨率、色彩空间、
+     包体积三件事，收益不成比例。
+   ──────────────────────────────────────────────────────────────────────── */
+
+/** 招牌配色池 —— 按中国街头实际观察归纳（餐饮红黄 / 五金电信蓝白 /
+    药店水果绿白 / 便利店黄红 / 理发白红 / 金店黑金 …）。
+    ★ 招牌是工业印刷品，颜色是**几套标准色**而非连续分布 ——
+      所以用离散色池，不做浮点漂移。 */
+export const SIGN_STYLES = [
+  { bg: '#b0342a', fg: '#f2efe6', edge: '#7d1f18' }, // 暗红 / 米白
+  { bg: '#c0392b', fg: '#f2d06b', edge: '#8e2418' }, // 大红 / 亮黄
+  { bg: '#1e5b8a', fg: '#eef2f5', edge: '#123c5e' }, // 中蓝 / 白
+  { bg: '#1f6f4a', fg: '#eef5ef', edge: '#12452e' }, // 墨绿 / 白
+  { bg: '#e8b93a', fg: '#a03020', edge: '#b08a20' }, // 明黄 / 砖红
+  { bg: '#ece8dc', fg: '#b0342a', edge: '#c4bda8' }, // 米白 / 砖红
+  { bg: '#2a2a28', fg: '#d9b45a', edge: '#111110' }, // 近黑 / 金
+  { bg: '#c9601f', fg: '#f7f1e6', edge: '#8f4212' }, // 橙   / 米白
+  { bg: '#243a5e', fg: '#e8c86a', edge: '#14243c' }, // 藏青 / 浅金
+  { bg: '#2d4a3e', fg: '#e4ddc8', edge: '#1a2e26' }, // 墨绿灰 / 米
+  { bg: '#a83a6a', fg: '#f5eef2', edge: '#78264a' }, // 品红 / 白
+  { bg: '#4a5a68', fg: '#dfe4e8', edge: '#2d3a45' }, // 灰蓝 / 白
+];
+
+/** 字体池 —— 招牌以黑体为主，其次宋体与中宋（隶书渲染不可靠，不列） */
+export const SIGN_FONTS = [
+  '"Microsoft YaHei","PingFang SC",sans-serif',
+  '"SimHei","Microsoft YaHei",sans-serif',
+  '"SimSun","Songti SC",serif',
+  '"STZhongsong","SimSun",serif',
+];
+
+/** 招牌。平面标识物，不需要法线（本来就是平的）。
+    ★ 向后兼容：`signTex('小卖部')` 的行为与改造前完全一致
+      （暗红底米白字 + 压边），新能力全部走可选参数。 */
 export function signTex(text, opt = {}) {
-  const { bg = '#b0342a', fg = '#f2efe6', w = 512, h = 128 } = opt;
+  const {
+    w = 512, h = 128,
+    style = null,          // SIGN_STYLES 的一项
+    layout = 'h',          // 'h' 横排 | 'v' 竖排 | 'stack' 主副双行
+    sub = '',              // layout='stack' 的副标题
+    font = SIGN_FONTS[0],
+    frame = true,          // 周边压边（亚克力灯箱 / 铝塑板的典型结构）
+    distress = 14,         // 做旧强度
+  } = opt;
+  const bg = opt.bg ?? (style ? style.bg : '#b0342a');
+  const fg = opt.fg ?? (style ? style.fg : '#f2efe6');
+  const edge = opt.edge ?? (style ? style.edge : null);
+
   const c = canvas(w, h), ctx = c.getContext('2d');
   ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
   ctx.fillStyle = fg;
-  const size = Math.min(h * 0.62, (w * 0.86) / Math.max(text.length, 1));
-  ctx.font = `700 ${size}px "Microsoft YaHei","PingFang SC",sans-serif`;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(text, w / 2, h * 0.54);
-  ctx.strokeStyle = 'rgba(30,26,22,0.5)'; ctx.lineWidth = 5;
-  ctx.strokeRect(2.5, 2.5, w - 5, h - 5);
+
+  if (layout === 'v') {
+    /* 竖排侧招：逐字向下，按字数自适应字距，整串尽量占满高度 */
+    const chars = [...String(text)];
+    const size = Math.min(w * 0.6, (h * 0.88) / Math.max(chars.length, 1));
+    ctx.font = `700 ${size}px ${font}`;
+    const step = h / (chars.length + 0.35);
+    chars.forEach((ch, i) => ctx.fillText(ch, w / 2, step * (i + 0.68)));
+  } else if (layout === 'stack' && sub) {
+    /* 主副双行：主名占上部，副标题小字在下（"老李烧烤 / 啤酒 炒粉"） */
+    const s1 = Math.min(h * 0.46, (w * 0.88) / Math.max(String(text).length, 1));
+    ctx.font = `700 ${s1}px ${font}`;
+    ctx.fillText(text, w / 2, h * 0.37);
+    const s2 = Math.min(h * 0.22, (w * 0.7) / Math.max(String(sub).length, 1));
+    ctx.globalAlpha = 0.88;
+    ctx.font = `400 ${s2}px ${font}`;
+    ctx.fillText(sub, w / 2, h * 0.74);
+    ctx.globalAlpha = 1;
+  } else {
+    /* 横排单行（默认，也是改造前的原有行为） */
+    const size = Math.min(h * 0.62, (w * 0.86) / Math.max(String(text).length, 1));
+    ctx.font = `700 ${size}px ${font}`;
+    ctx.fillText(text, w / 2, h * 0.54);
+  }
+
+  if (frame) {
+    ctx.strokeStyle = edge || 'rgba(30,26,22,0.5)';
+    ctx.lineWidth = 5;
+    ctx.strokeRect(2.5, 2.5, w - 5, h - 5);
+  }
+
   blotch(ctx, w, h, 16, a => `rgba(40,34,28,${0.04 + a * 0.12})`, 26);
-  grain(ctx, w, h, 14);
+  if (distress) grain(ctx, w, h, distress);
   return toTexture(c, { kind: 'sign', normalScale: 0.3, clamp: true });
+}
+
+/** 海报 / 灯箱广告：饱和色块 + 大字 + 价格。
+    上部 62% 是主视觉（色块 + 斜带或圆形装饰），下部是信息区。 */
+export function posterTex(opt = {}) {
+  const {
+    w = 384, h = 512,
+    style = null, title = '特价', sub = '', price = '', note = '',
+    motif = 'band',        // 'band' 斜色带 | 'circle' 圆形 | 'none'
+    font = SIGN_FONTS[0],
+  } = opt;
+  const bg = opt.bg ?? (style ? style.bg : '#c0392b');
+  const fg = opt.fg ?? (style ? style.fg : '#f7f1e6');
+
+  const c = canvas(w, h), ctx = c.getContext('2d');
+  ctx.fillStyle = '#efe9dc'; ctx.fillRect(0, 0, w, h);      // 纸底
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h * 0.62);      // 主视觉底
+
+  if (motif !== 'none') {
+    ctx.save();
+    ctx.globalAlpha = 0.2; ctx.fillStyle = '#ffffff';
+    if (motif === 'band') {
+      ctx.translate(w * 0.5, h * 0.31); ctx.rotate(-0.5);
+      ctx.fillRect(-w, -h * 0.085, w * 2, h * 0.17);
+      ctx.rotate(1.0);
+      ctx.fillRect(-w, -h * 0.045, w * 2, h * 0.09);
+    } else {
+      ctx.beginPath(); ctx.arc(w * 0.5, h * 0.31, w * 0.27, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  ctx.fillStyle = fg; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const s1 = Math.min(h * 0.16, (w * 0.8) / Math.max([...String(title)].length, 1));
+  ctx.font = `700 ${s1}px ${font}`;
+  ctx.fillText(title, w / 2, h * 0.22);
+
+  if (price) {
+    ctx.font = `700 ${h * 0.155}px ${font}`;
+    ctx.fillText(price, w / 2, h * 0.47);
+  }
+
+  ctx.fillStyle = '#3a352c';
+  if (sub) {
+    const s3 = Math.min(h * 0.062, (w * 0.72) / Math.max([...String(sub)].length, 1));
+    ctx.font = `500 ${s3}px ${font}`;
+    ctx.fillText(sub, w / 2, h * 0.72);
+  }
+  if (note) {
+    ctx.fillStyle = '#6a6356';
+    const s4 = Math.min(h * 0.044, (w * 0.76) / Math.max([...String(note)].length, 1));
+    ctx.font = `400 ${s4}px ${font}`;
+    ctx.fillText(note, w / 2, h * 0.82);
+  }
+  ctx.fillStyle = bg; ctx.fillRect(0, h * 0.9, w, h * 0.1);
+
+  blotch(ctx, w, h, 14, a => `rgba(60,52,40,${0.03 + a * 0.1})`, 30);
+  grain(ctx, w, h, 12);
+  return toTexture(c, { kind: 'poster', normalScale: 0.25, clamp: true });
+}
+
+/** 牛皮癣小广告的服务池 —— 内容取自城中村墙面的真实类型 */
+export const FLYER_SERVICES = [
+  { t: '疏通下水道', n: '138 0013 8000' },
+  { t: '专业开锁换锁芯', n: '159 2048 7761' },
+  { t: '搬家拉货长短途', n: '137 5520 3312' },
+  { t: '空调拆装加雪种', n: '186 7734 0912' },
+  { t: '老中医专治腰腿', n: '135 6091 4428' },
+  { t: '高价回收旧家电', n: '158 3376 2205' },
+  { t: '水电安装防水补漏', n: '139 8812 6640' },
+  { t: '出租单间带空调', n: '133 2468 1573' },
+];
+
+/** 牛皮癣小广告（A4 比例 0.21×0.297m）。
+    价值不在好看，而在**看似随机、随贴随掉**——它是"这面墙有人用过"的证据。 */
+export function flyerTex(opt = {}) {
+  const { w = 256, h = 362, seed = 0, aged = true } = opt;
+  const s = FLYER_SERVICES[Math.abs(seed | 0) % FLYER_SERVICES.length];
+  const c = canvas(w, h), ctx = c.getContext('2d');
+
+  ctx.fillStyle = aged ? '#f0ead8' : '#fbfaf6';
+  ctx.fillRect(0, 0, w, h);
+
+  ctx.fillStyle = '#241f1a';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+  /* 标题按 7 字折行 —— 不折行的话长文案会被压成一行看不清的小字 */
+  const chars = [...s.t];
+  const lines = chars.length > 7
+    ? [chars.slice(0, Math.ceil(chars.length / 2)).join(''), chars.slice(Math.ceil(chars.length / 2)).join('')]
+    : [s.t, ''];
+  const size = Math.min(w * 0.17, (w * 0.86) / Math.max(...lines.map(l => l.length), 1));
+  ctx.font = `700 ${size}px "SimHei","Microsoft YaHei",sans-serif`;
+  lines.forEach((ln, i) => { if (ln) ctx.fillText(ln, w / 2, h * (0.29 + i * 0.155)); });
+
+  ctx.font = `700 ${w * 0.115}px Arial,sans-serif`;
+  ctx.fillText(s.n, w / 2, h * 0.65);
+
+  ctx.strokeStyle = 'rgba(36,31,26,0.5)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(w * 0.15, h * 0.75); ctx.lineTo(w * 0.85, h * 0.75); ctx.stroke();
+
+  blotch(ctx, w, h, 10, a => `rgba(120,100,70,${0.04 + a * 0.1})`, 22);
+  grain(ctx, w, h, 10);
+  return toTexture(c, { kind: 'flyer', normalScale: 0.15, clamp: true });
+}
+
+/** 横幅标语文本池 */
+export const BANNER_TEXTS = [
+  '热烈庆祝开业大吉', '创建文明城市 共建美好家园', '此处严禁倒垃圾',
+  '安全生产 人人有责', '全民反诈 你我同行', '依法经营 诚信为本',
+  '消防安全 重于泰山', '保持通道畅通 严禁堆放杂物',
+];
+
+/** 横幅标语：红底黄字，约 8:1 长条 */
+export function bannerTex(opt = {}) {
+  const { w = 1024, h = 128, text = null, seed = 0 } = opt;
+  const t = text || BANNER_TEXTS[Math.abs(seed | 0) % BANNER_TEXTS.length];
+  const c = canvas(w, h), ctx = c.getContext('2d');
+  ctx.fillStyle = '#c0392b'; ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = '#f5d76e';
+  const size = Math.min(h * 0.6, (w * 0.9) / Math.max([...t].length, 1));
+  ctx.font = `700 ${size}px "STZhongsong","SimSun",serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(t, w / 2, h * 0.53);
+  blotch(ctx, w, h, 12, a => `rgba(70,20,14,${0.04 + a * 0.1})`, 26);
+  grain(ctx, w, h, 10);
+  return toTexture(c, { kind: 'banner', normalScale: 0.2, clamp: true });
 }
 
 /* 屋顶：铁皮 / 防水油毡 */
@@ -763,10 +1159,29 @@ export function paverTex(opt = {}) {
     for (let x = 0; x < N; x += tile) {
       hctx.fillStyle = '#5c5c5c';
       hctx.fillRect(x - joint / 2, y, joint, tile);
-      const v = 0.86 + Math.random() * 0.28;
-      ctx.fillStyle = `rgb(${Math.round(155 * v)},${Math.round(154 * v)},${Math.round(146 * v)})`;
+
+      /* ★ 每块砖的明度：**分布**比幅度更重要（这一条踩过坑，别退回去）。
+         原来写的是 `v = 0.86 + Math.random()*0.28` —— 均匀分布，
+         相邻两块砖最多能差 28%。在 1024 里是 15×15 块小砖，铺出来就是
+         **一片像素噪点**，比 slabTex 那次的棋盘格更明显。
+         实测证据：取证截图 6-street-lane-plain.png 右侧人行道，
+         以及 dev/_3dtest/shots-textures/ground.paver.png。
+         现改成"绝大多数接近同一色、极少数明显偏深"，与真实砖场一致：
+         砖是同一窑出的，色差本来就很小，偶尔混进几块次品。 */
+      const t = (Math.random() - 0.5) * 2;
+      const v = 1 + Math.sign(t) * Math.pow(Math.abs(t), 2.4) * 0.055;
+      /* 另有约 4% 的砖明显偏深（次品 / 被油污浸过）——
+         没有这几块，整片砖会"太干净"，反而不像被人踩过。 */
+      const stained = Math.random() < 0.04 ? 0.86 : 1;
+      const k = v * stained;
+      ctx.fillStyle = `rgb(${Math.round(155 * k)},${Math.round(154 * k)},${Math.round(146 * k)})`;
       ctx.fillRect(x + joint / 2, y + joint / 2, tile - joint, tile - joint);
     }
+  }
+  /* 缝里积灰：宽而淡的一条，压在砖面之上。没有它，缝只是一条色带。 */
+  for (let y = 0; y < N; y += tile) {
+    ctx.fillStyle = 'rgba(52,54,50,0.10)';
+    ctx.fillRect(0, y - joint, N, joint * 2);
   }
   blotch(ctx, N, N, 46, a => `rgba(60,62,58,${0.03 + a * 0.08})`, 34);
   grain(ctx, N, N, 16);
@@ -807,11 +1222,31 @@ export function grassTex(opt = {}) {
 
 /* 石材（干挂）：政务、银行、高档场所的台阶与地面。
    真实干挂石材板约 800×800mm。低对比 → 512 足够。 */
+/* 石材铺装 / 石材墙面（tier3 地面 + 两档外墙）。
+
+   ★ [2026-09-19 对齐《大多数》] 这个函数原来是**画面里最大的一块纯色**：
+     · 尺寸只有 512（NOISE），而它铺的是"富人区广场 + 高层外墙"这种
+       占屏幕面积最大的面 —— 分辨率不够，缝和脉络全糊在一起；
+     · 脉络 alpha 0.06~0.18、斑块 alpha 0.03~0.10，两者叠起来仍然接近纯色。
+     实测读数：块级明度离散度 **CV 0.47%**（见 scripts/shot-textures.cjs）——
+     等于一块死色。取证截图 6-street-lane-plain.png 里，画面左侧那片发白的
+     墙和广场就是它，是全图最"一眼假"的一处。
+
+     修法与 slabTex 同一套：提到 EXT(1024) → 低频云斑 → 板间明度微扰 →
+     缝（暗晕+细线+倒角）→ 脉络 → 沙砾。
+
+   ★ 云斑必须画在**切板之前**：石材的纹理是整块荒料切出来的，
+     先切板再打斑会变成"每块板一个斑"，那正是最典型的"贴纸"读法。
+     板缝叠在云斑之上，才读得出"这是被切开的一整块石头"。 */
 export function stoneTex(opt = {}) {
-  const { base = '#8f8b84', slabMM = 800, metersPerRepeat = GROUND_TILE_M } = opt;
-  const N = NOISE;
+  const {
+    base = '#8f8b84', slabMM = 800, jointMM = 10,
+    metersPerRepeat = GROUND_TILE_M, tone = 0.09,
+  } = opt;
+  const N = EXT;
   const n = gridCount(slabMM, N, false, metersPerRepeat);
-  const slab = N / n;
+  const cell = N / n;
+  const joint = Math.max(2, px(jointMM, N, metersPerRepeat));
 
   const c = canvas(N), ctx = c.getContext('2d');
   const hc = canvas(N), hctx = hc.getContext('2d');
@@ -819,26 +1254,104 @@ export function stoneTex(opt = {}) {
   ctx.fillStyle = base; ctx.fillRect(0, 0, N, N);
   hctx.fillStyle = '#e0e0e0'; hctx.fillRect(0, 0, N, N);
 
-  // 板缝
-  ctx.strokeStyle = 'rgba(70,66,62,0.45)'; ctx.lineWidth = 1.6;
-  hctx.strokeStyle = '#585858'; hctx.lineWidth = 2.4;
-  for (let i = 0; i <= N; i += slab) {
-    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, N); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(N, i); ctx.stroke();
-    hctx.beginPath(); hctx.moveTo(i, 0); hctx.lineTo(i, N); hctx.stroke();
-    hctx.beginPath(); hctx.moveTo(0, i); hctx.lineTo(N, i); hctx.stroke();
+  /* ① 低频云斑（跨板）。石材是微晶集合体，明暗是大面积渐变的，
+        不是颗粒 —— 这一层决定"像不像石头"。
+
+        ★ 尺寸与浓度都要克制（第一版踩过）：26 个、半径最大 3.5 格、
+          浓度到 0.13 —— 铺出来是一片**水彩晕染**，而且因为深色斑比浅色斑多，
+          整体还暗了 30%（均值 164 → 115）。现在：斑更小更多、深浅各半，
+          让它读成"石头的云纹"而不是"一块洇湿的纸"。 */
+  for (let i = 0; i < 34; i++) {
+    const x = Math.random() * N, y = Math.random() * N;
+    const rad = cell * (0.45 + Math.random() * 1.15);
+    const light = Math.random() < 0.5;
+    const a = 0.030 + Math.random() * 0.045;
+    const g = ctx.createRadialGradient(x, y, rad * 0.12, x, y, rad);
+    g.addColorStop(0, light ? `rgba(236,234,228,${a})` : `rgba(66,62,58,${a})`);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, rad, 0, Math.PI * 2); ctx.fill();
   }
-  // 石材纹理（低对比脉络）
-  for (let i = 0; i < 30; i++) {
-    ctx.strokeStyle = `rgba(60,56,52,${0.06 + Math.random() * 0.12})`;
-    ctx.lineWidth = 0.6 + Math.random() * 1.6;
+
+  /* ①-b 细云斑。只有大斑会让石面读成"平滑塑料" —— 石材在近处是有
+        微米级结晶颗粒感的。这一层补的就是它，半径小、数量多。
+
+        ★ 数量要够多、浓度要够低：90 个 @0.075 时能**数出一颗颗圆斑**，
+          反而变成"起泡"。130 个 @0.04 就糊成连续的斑驳。 */
+  for (let i = 0; i < 130; i++) {
+    const x = Math.random() * N, y = Math.random() * N;
+    const rad = cell * (0.06 + Math.random() * 0.22);
+    const light = Math.random() < 0.5;
+    const a = 0.020 + Math.random() * 0.040;
+    ctx.fillStyle = light ? `rgba(240,238,232,${a})` : `rgba(58,54,50,${a})`;
+    ctx.beginPath(); ctx.arc(x, y, rad, 0, Math.PI * 2); ctx.fill();
+  }
+
+  /* ② 每块板一个独立的明度。分布与 slabTex 同款（pow 压向 0），
+        理由见 slabTex 顶部：均匀随机会铺出棋盘格。 */
+  for (let r = 0; r < n; r++) {
+    for (let q = 0; q < n; q++) {
+      const t = (Math.random() - 0.5) * 2;
+      const d = Math.sign(t) * Math.pow(Math.abs(t), 2.2) * tone;
+      ctx.fillStyle = d > 0 ? `rgba(255,255,255,${d})` : `rgba(0,0,0,${-d})`;
+      ctx.fillRect(q * cell, r * cell, cell, cell);
+    }
+  }
+
+  /* ③ 板缝：暗晕 → 细线 → 受光倒角。
+        ★ 缝必须画三遍（-N/0/+N），理由同 slabTex：RepeatWrapping 下
+          只在 x=0 画一次，左右边缘各留半条缝，平铺后粗细不均。 */
+  const vline = (x, w, color, tgt) => {
+    tgt.fillStyle = color;
+    for (const dx of [-N, 0, N]) tgt.fillRect(x + dx - w / 2, 0, w, N);
+  };
+  const hline = (y, w, color, tgt) => {
+    tgt.fillStyle = color;
+    for (const dy of [-N, 0, N]) tgt.fillRect(0, y + dy - w / 2, N, w);
+  };
+  for (let i = 0; i < n; i++) {
+    vline(i * cell, Math.max(joint * 3, 5), 'rgba(58,54,50,0.12)', ctx);
+    hline(i * cell, Math.max(joint * 3, 5), 'rgba(58,54,50,0.12)', ctx);
+  }
+  for (let i = 0; i < n; i++) {
+    vline(i * cell, joint, 'rgba(70,66,62,0.44)', ctx);
+    vline(i * cell, joint, '#585858', hctx);
+    hline(i * cell, joint, 'rgba(70,66,62,0.44)', ctx);
+    hline(i * cell, joint, '#585858', hctx);
+    vline(i * cell + joint * 0.8, 2, 'rgba(255,255,255,0.12)', ctx);
+    hline(i * cell + joint * 0.8, 2, 'rgba(255,255,255,0.12)', ctx);
+  }
+
+  /* ④ 脉络（石材特有的细纹）。★ 要有**浅色**脉络 —— 只画深色会让
+        石材读成"脏水泥"，浅色脉是石英/方解石脉，是石材的身份特征。 */
+  for (let i = 0; i < 46; i++) {
+    const light = Math.random() < 0.35;
+    ctx.strokeStyle = light
+      ? `rgba(238,236,230,${0.10 + Math.random() * 0.16})`
+      : `rgba(58,54,50,${0.08 + Math.random() * 0.16})`;
+    ctx.lineWidth = 0.6 + Math.random() * 1.7;
     ctx.beginPath();
     let x = Math.random() * N, y = Math.random() * N;
     ctx.moveTo(x, y);
-    for (let s = 0; s < 4; s++) { x += (Math.random() - 0.5) * 110; y += (Math.random() - 0.5) * 40; ctx.lineTo(x, y); }
+    /* 脉络走向要**有主方向**（沉积岩是层状的），纯随机游走会变成蜘蛛网。 */
+    const dirX = (Math.random() - 0.5) * 2, dirY = (Math.random() - 0.5) * 0.7;
+    for (let s = 0; s < 5; s++) {
+      x += dirX * (40 + Math.random() * 90);
+      y += dirY * (40 + Math.random() * 90) + (Math.random() - 0.5) * 30;
+      ctx.lineTo(x, y);
+    }
     ctx.stroke();
   }
-  blotch(ctx, N, N, 20, a => `rgba(160,156,148,${0.03 + a * 0.07})`, 40);
+
+  /* ⑤ 沙砾。细而淡，理由同 slabTex：颗粒一大就成"麻子脸"。 */
+  for (let i = 0; i < 300; i++) {
+    const light = Math.random() < 0.5;
+    ctx.fillStyle = light
+      ? `rgba(240,238,232,${0.05 + Math.random() * 0.10})`
+      : `rgba(52,48,44,${0.05 + Math.random() * 0.10})`;
+    ctx.fillRect(Math.random() * N, Math.random() * N, 0.7 + Math.random() * 1.3, 0.7 + Math.random() * 1.3);
+  }
+
   grain(ctx, N, N, 12);
   grain(hctx, N, N, 10);
   return toTexture(c, { kind: 'stone', normalScale: 0.8, height: hc, metersPerRepeat });
@@ -902,13 +1415,8 @@ export function materialDebug() {
     tileM: _matDebug.tileM, ext: _matDebug.ext, noise: _matDebug.noise,
     surfaces: _surfaces.slice(),
     normalMapsBuilt: _normalCount,
-    /* 法线贴图覆盖率：有高度的表面 / 全部表面。
-       §6.2 要求"所有材质都补法线"，但招牌/玻璃这类平面标识物
-       本来就是平的、不该有凹凸 —— 所以统计时要排除。 */
-    normalCoverage: (() => {
-      const shouldn = _surfaces.filter(s => s.kind !== 'sign' && s.kind !== 'glass');
-      const got = shouldn.filter(s => s.hasHeight);
-      return { expected: shouldn.length, withHeight: got.length };
-    })(),
+    /* 法线贴图覆盖率 —— 直接复用 _matDebug 上那份**单一真源**，
+       不在这里再算一遍（同名两份实现必然漂移，这是刚踩过的坑）。 */
+    normalCoverage: _matDebug.normalCoverage,
   };
 }
