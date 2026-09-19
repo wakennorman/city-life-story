@@ -359,8 +359,28 @@ export function createHUD(opts = {}) {
        会出现在"托盘没开"时也调一次 toggleTray(false) 的空操作。 */
     get trayOpen() { return trayOpen; },
 
-    /** 反馈条。kind: ok | warn | bad */
+    /** 反馈条。kind: ok | warn | bad
+     *
+     *  ★ 2026-09-19：优先走**场景内提醒**（opts.onToast → bridge.js::notify）。
+     *    理由：这已经是 3D 游戏，反馈就该发生在场景里（角色头顶浮一条 sprite）。
+     *    DOM 浮条有两个治不好的毛病：
+     *      ① 它不经过后处理链（AO/Bloom/ACES 色调映射），所以无论在正午还是夜里，
+     *         它都是同一个死白色 —— 光感永远和画面脱节；
+     *      ② 它是"网页套壳"最显眼的残迹，一眼就能看出游戏是网页贴了一层 3D。
+     *
+     *  ★ 契约：opts.onToast 返回 **true** 表示"已经在场景里显示了"，这里就不再弹 DOM。
+     *    返回 false / 未提供 → 退回下面的 DOM 浮条。
+     *    这个返回值不能省：3D 未初始化或已经 dispose 时，若还"假装成功"，
+     *    消息就会被静默吞掉 —— 玩家点了行动却什么都看不到，且没有任何报错。 */
     notify(msg, kind = "ok") {
+      if (typeof opts.onToast === "function") {
+        try {
+          if (opts.onToast(msg, kind) === true) return;
+        } catch (e) {
+          /* 场景提醒自身出问题时不能让反馈彻底消失 → 落到 DOM 兜底。 */
+          if (typeof console !== "undefined") console.warn("[hud] 场景提醒失败，退回 DOM：", e);
+        }
+      }
       const el = document.createElement("div");
       el.className = `s3h-toast is-${kind}`;
       el.textContent = msg;

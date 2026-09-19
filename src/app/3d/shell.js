@@ -46,7 +46,17 @@ export function create3DShell(opts = {}) {
   root.appendChild(stage);
   container.appendChild(root);
 
-  const hud = createHUD();
+  /* ★ 把 HUD 的浮条反馈接到**场景内提醒**上（hud.notify → view.notify）。
+     view 在这里还是 null（下一段才创建），但箭头函数是延迟执行的，
+     真被调用时 view 已经就绪；若构造 3D 时同步抛错，此处返回 false，
+     HUD 会退回 DOM 浮条 —— 反馈永远不会因为 3D 挂了而消失。 */
+  const hud = createHUD({
+    onToast: (msg, kind) => {
+      if (!view || typeof view.notify !== "function") return false;
+      view.notify(msg, { kind });
+      return true;
+    },
+  });
   root.appendChild(hud.el);   // HUD 必须挂进外壳根，否则只是个游离的 DOM
 
   let view = null;

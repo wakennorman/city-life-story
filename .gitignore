@@ -135,6 +135,11 @@ Microsoft/
 /dev/_3dtest/shots-first/
 /dev/_3dtest/shots-mobile/
 /dev/_3dtest/hud-geometry/
+#   iso3d/          —— 并发编辑逃生口：隔离源码树快照（见 build-3d-bundle.cjs
+#                     的 SCENE3D_ENTRY 注释）。只用于"别人正在改别的文件、
+#                     整棵树构建失败"时独立验证自己的改动，不参与提交。
+/dev/_3dtest/iso3d/
+/dev/_3dtest/shots-actors/
 
 # dev/ 下其余截图产物（同样每次跑脚本重新生成）
 #   shots/         —— scripts/shot-scene3d.cjs 逐地点截图

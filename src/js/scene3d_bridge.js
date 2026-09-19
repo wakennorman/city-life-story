@@ -246,7 +246,19 @@
   }
 
   var toastTimer = 0;
-  function toast(msg) {
+  /**
+   * 浮层形态下的反馈。
+   * ★ 与 3D-first 形态一致：优先走**场景内提醒**（角色头顶的 sprite），
+   *   而不是页面上弹一条 HTML。3D 起不来时才退回 DOM —— 那时场景内提醒没有载体。
+   * @param {string} msg
+   * @param {object} [opt] { kind, forceDom }
+   */
+  function toast(msg, opt) {
+    var o = opt || {};
+    if (!o.forceDom && overlay3d && typeof overlay3d.notify === "function") {
+      overlay3d.notify(msg, { kind: o.kind });
+      return;
+    }
     if (!overlayEl) return;
     var el = overlayEl.querySelector(".scene3d-overlay__toast");
     if (!el) return;
@@ -278,17 +290,18 @@
             if (r.ok) {
               closeOverlay(); // handler 内部已触发重渲染
             } else {
-              toast("⚠️ " + (h.label || "该行动") + "：" + r.reason);
+              toast("⚠️ " + (h.label || "该行动") + "：" + r.reason, { kind: "warn" });
             }
           },
           onFocus: setPrompt,
-          onError: function (e) { toast("3D 不可用：" + e.message); },
+          /* ★ 这两条描述的是"3D 本身出了问题"，场景内提醒没有载体 → 必须走 DOM。 */
+          onError: function (e) { toast("3D 不可用：" + e.message, { forceDom: true }); },
         });
         overlay3d.start();
       }
       overlay3d.loadLocation(locId);
     } catch (e) {
-      toast("3D 初始化失败：" + (e && e.message ? e.message : e));
+      toast("3D 初始化失败：" + (e && e.message ? e.message : e), { forceDom: true });
       return;
     }
 

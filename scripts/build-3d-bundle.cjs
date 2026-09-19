@@ -30,9 +30,17 @@ const esbuild = require("esbuild");
 
 const ROOT = path.resolve(__dirname, "..");
 const entryArgIdx = process.argv.indexOf("--entry");
+/* ★ 并发逃生口 SCENE3D_ENTRY（环境变量，等价于 --entry）。
+   多窗口并行时，别人可能正在改 src/app/3d 下的**别的文件**，一个未完成的
+   import（例如刚引用、还没生成的 json）就会让整棵树构建失败 ——
+   这时自己的改动根本没法独立验证。
+   指向一棵隔离的源码树快照即可（快照放 dev/_3dtest/iso3d/，已 gitignore）：
+     cp src/app/3d/*.js src/app/3d/*.json dev/_3dtest/iso3d/
+     SCENE3D_ENTRY=dev/_3dtest/iso3d/index.js node scripts/build-3d-bundle.cjs
+   缺点要说清：跑的是**快照那一刻**的代码，不是实时工作区 —— 快照前记得重拷。 */
 const ENTRY = entryArgIdx > -1
   ? path.resolve(ROOT, process.argv[entryArgIdx + 1])
-  : path.join(ROOT, "src/app/3d/index.js");
+  : path.resolve(ROOT, process.env.SCENE3D_ENTRY || "src/app/3d/index.js");
 
 const outArgIdx = process.argv.indexOf("--out");
 const OUT = outArgIdx > -1
