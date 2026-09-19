@@ -152,3 +152,32 @@ Microsoft/
 /dev/shots-canvas/
 /dev/shots-mini/
 /dev/gb/
+
+# ── 3D 场景层 · 截图产物（2026-09-19 一次补齐）────────────────────────────────
+# 上一节只列了当时已存在的目录；此后各窗口陆续新增了一批截图目录，
+# 每次跑验证都会让 git status 多出十几条未跟踪项，把真正的变更淹没。
+# 判定标准不变：**跑脚本就能重新生成的，不入库**。
+#   shots-texab/       —— scripts/shot-texab.cjs 真实贴图 ON/OFF 对照图
+#   shots-textures/    —— scripts/shot-textures.cjs 程序化贴图接触表
+#   shots-polyhaven/   —— scripts/shot-polyhaven-placement.cjs 资产摆位
+#   shots-assets/      —— scripts/shot-assets.cjs 资产总览
+#   shots-face/        —— scripts/verify-face.cjs 脸部特写
+#   shots-ai/          —— scripts/shot-ai-placement.cjs
+#   shots-ai-viewer/   —— scripts/verify-ai-viewer.cjs
+#   shots-npcdialog/   —— scripts/verify-npc-dialog.cjs
+#   shots-opening/     —— 开局即 3D 的舞台模式截图
+#   shots-mini/        —— 侧栏缩略景（dev/_3dtest 下那一份）
+#   isoHEAD/           —— 隔离快照（同 iso3d/，只用于并发编辑逃生）
+#   *-sheet.jpg        —— 接触表拼图（cand-sheet / reftextures-sheet）
+/dev/_3dtest/shots-texab/
+/dev/_3dtest/shots-textures/
+/dev/_3dtest/shots-polyhaven/
+/dev/_3dtest/shots-assets/
+/dev/_3dtest/shots-face/
+/dev/_3dtest/shots-ai/
+/dev/_3dtest/shots-ai-viewer/
+/dev/_3dtest/shots-npcdialog/
+/dev/_3dtest/shots-opening/
+/dev/_3dtest/shots-mini/
+/dev/_3dtest/isoHEAD/
+/dev/_3dtest/*-sheet.jpg

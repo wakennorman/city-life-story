@@ -50,6 +50,9 @@ import polyhavenManifest from './polyhaven-manifest.json';
    尺寸是**预处理烘焙后**的米制实测值 —— 用于验证脚本断言"高度 = 目标值"，
    而不是只断言"加载成功了"（后者对"尺寸错了 10 倍"毫无察觉）。 */
 import aiManifest from './ai-manifest.json';
+/* ★ 资产根本体（叶子模块）。见 asset-base.js 顶注：
+   拆出去是为了让"只要资产根"的模块不必把 GLTFLoader + 三个 JSON 一起拖进来。 */
+import { assetBase } from './asset-base.js';
 
 /** 资产根路径。相对 app.js（位于 dist/ 根），与 dist/assets/ 对应。
  *
@@ -62,22 +65,13 @@ import aiManifest from './ai-manifest.json';
  *     `assets/kenney/polyhaven/models/...` —— 静默 404（降级到兜底几何）。
  *     所以改为 'assets/'，并同步改探针/验证脚本传入的 base。
  */
-const ASSET_BASE_DEFAULT = 'assets/';
-
-/* ★ 为什么要可覆盖：
-   生产（dist/）里资产在 dist/assets/ —— 与 app.js 同级，故相对路径即可。
-   但 dev 预览页是**从项目根**提供服务的（见 scripts/lib/serve.cjs），
-   那时 'assets/' 会指向项目根下已有的 assets/（只放 icons），是 404。
-   dev 侧的真实位置是 src/assets/。故允许注入 base。 */
-let ASSET_BASE = ASSET_BASE_DEFAULT;
-
-/** 覆盖资产根路径（供 dev 预览/验证脚本调用）。 */
-export function setAssetBase(base) {
-  if (typeof base === 'string' && base) ASSET_BASE = base.endsWith('/') ? base : base + '/';
-}
-
-/** 当前资产根路径（验证脚本读） */
-export function assetBase() { return ASSET_BASE; }
+/* ★ 资产根本体已拆到叶子模块 asset-base.js（2026-09-19）。
+   原因：assets.js 还拖着 GLTFLoader 与三个 JSON 清单，而"只想知道资产根"的
+   模块（如 textures.js）一 import 就把这些一起拉进来 —— 浏览器原生 ESM
+   不能导入裸 JSON，于是 dev 预览页整个模块图加载失败。
+   这里**只做转发**，保持 `import { assetBase } from './assets.js'` 的老写法仍然可用
+   （index.js 的 `export *` 也照旧）。单一真源在 asset-base.js。 */
+export { setAssetBase, assetBase } from './asset-base.js';
 
 /** 已知 kit 白名单 —— 防拼错路径，也让验证脚本能枚举。 */
 export const KITS = ['commercial', 'industrial', 'roads'];
@@ -268,9 +262,9 @@ export function createAssetLoader() {
          这样 URL 可预测、不依赖清单字段，也不会因为 Poly Haven
          改了原始文件名而失效。
          清单里的 `file` 字段保留着，用于**溯源**（哪个源文件打出来的）。 */
-      return `${ASSET_BASE}${SRC_PATH[source]}/${kit}/${kit}.glb`;
+      return `${assetBase()}${SRC_PATH[source]}/${kit}/${kit}.glb`;
     }
-    return `${ASSET_BASE}${SRC_PATH[source]}/${kit}/${name}${SRC_EXT[source]}`;
+    return `${assetBase()}${SRC_PATH[source]}/${kit}/${name}${SRC_EXT[source]}`;
   }
 
   /**
@@ -530,7 +524,7 @@ export function listHdri() {
 
 /** HDRI 的 URL（未载入时不请求，只是拼路径）。 */
 export function hdriUrl(name) {
-  return `${ASSET_BASE}polyhaven/hdri/${name}.hdr`;
+  return `${assetBase()}polyhaven/hdri/${name}.hdr`;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════

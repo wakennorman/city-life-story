@@ -21,6 +21,8 @@
     "verify:dev-entries": "node scripts/verify-dev-entries.cjs",
     "verify:polyhaven": "node scripts/verify-polyhaven.cjs",
     "verify:textures": "node scripts/verify-textures.cjs",
+    "verify:texload": "node scripts/verify-texload.cjs",
+    "shot:texab": "node scripts/shot-texab.cjs",
     "shot:textures": "node scripts/shot-textures.cjs",
     "verify:polyhaven-glb": "node scripts/verify-glb-pack.cjs",
     "shot:3d-assets": "node scripts/shot-3d-assets.cjs",

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { palette, tierOf } from './palette.js';
 import { syncNormalRepeat, posterTex, flyerTex, bannerTex } from './materials.js';
+import { bindTexture } from './textures.js';
 import * as K from './kit.js';
 import { rng, setRng, locationRng } from './rng.js';
 /* ★ 街道横断面唯一真源（车/人/道具三方共用）。见 road.js 顶注：
@@ -293,6 +294,20 @@ function tileMat(base, w, l, tile = null) {
     m.map.repeat.set(Math.max(1, w / t), Math.max(1, l / t));
   }
   syncNormalRepeat(m);   // ★ 凹凸密度必须跟着颜色走
+
+  /* ★ [2026-09-19] 克隆体也必须**登记到真实贴图的绑定表**里。
+     为什么这是必须的（不是可选的美化）：
+       textures.js::applyTo() 换图时靠 `texture.dispose()` 把旧显存分配丢掉，
+       而 three 只有在**同一个 Source 的所有贴图都 dispose 之后**才会真正
+       删掉 GL 纹理、并在下次渲染按新尺寸重新 texStorage2D。
+       这里如果只克隆不登记，这个克隆体就不在 _bind 里、永远不被 dispose，
+       usedTimes 归不了零 —— 于是真实贴图（1024²）往程序化（512²）的旧分配里塞，
+       texSubImage2D 尺寸不匹配：**报一条 GL_INVALID_VALUE，然后地面静静停在
+       程序化内容上**（JS 侧一切正常，截图之外没有任何症状）。
+       实测就是这么发现的：4 条 GL_INVALID_VALUE + 地面纹丝不动。
+     与 materials.js::fitRepeat() 里的 `if (bind) bindTexture(mat, bind.as)` 同一纪律。 */
+  const bind = base.userData && base.userData.texBind;
+  if (bind) bindTexture(m, bind.as);
   return m;
 }
 
@@ -636,11 +651,9 @@ function layoutCompound(ctx) {
       z += w + rnd(4, 9);
     }
   }
-  // 大门
-  if (spec.gate !== false) {
-    const a = K.archway({ w: gap + 0.6, h: 5.4, text: spec.shortName || spec.name });
-    ctx.place(a, 0, S / 2 - 0.4, 0, {});
-  }
+  /* ★ 2026-09-19 拆牌坊（恒稳的设计反馈）：对标《大多数》——
+     切换地点不立"大门"，当前在哪由顶部 HUD 的地点名负责。
+     入口只留围墙缺口（gap），出生点构图不变（回头是缺口、往前是院子）。 */
   // 出生点：刚进大门的位置，回头能看到门，往前能看到院子
   ctx.spawnZ = S / 2 - 16;
   return rows;
@@ -909,25 +922,27 @@ function layoutPlaza(ctx) {
     rows.push({ x: side * 22, z: mz + 10, d, w, side });
   }
 
-  // 入口序列：旗杆 / 牌坊 / 台阶广场
+  /* 入口序列：旗杆 / 台阶广场 / 低栏杆。
+     ★ 2026-09-19 拆牌坊：同 layoutCompound 的反馈——不立 archway，
+       只留两侧低栏杆标出入口（远景有收束、又不挡"这是哪"的判断）。 */
   if (spec.flagPole) {
     for (let i = 0; i < 3; i++) ctx.place(K.flagPole({ h: 11 }), (i - 1) * 4.5, mz + bd / 2 + 9, 0, {});
   }
-  if (spec.gate) {
+  if (spec.formal) {
     const gap = 10;
     for (const side of [-1, 1]) {
       ctx.place(K.fenceWall({ len: S / 2 - gap / 2, h: 2.2, tier, kind: 'railing' }),
         side * (S / 4 + gap / 4), S / 2 - 1.5, 0, {});
     }
-    ctx.place(K.archway({ w: gap + 0.8, h: 5.6, text: spec.shortName || spec.name }), 0, S / 2 - 1.5, 0, {});
   }
 
   /* —— 广场：遮阳伞（GLB，商业 kit）——
      广场/公园/夜市边缘的露天休息位。程序化的广场只有硬质铺装与树，
      加几把伞立刻有"人能坐下来"的暗示 —— 这是生活模拟场景最需要的。
-     ★ 只放在**休闲性**广场：政务/法院/医院这类有 gate 的机构场地放伞
-       不合逻辑（那里没有露天消费场景），故用 !spec.gate 排除。 */
-  const parasolCount = spec.gate ? 0 : rndInt(2, 4);
+     ★ 只放在**休闲性**广场：政务/法院/医院这类 formal（庄重机构）场地放伞
+       不合逻辑（那里没有露天消费场景），故用 !spec.formal 排除。
+       （formal 原名 gate，牌坊拆除后它只剩这层语义，故改名。） */
+  const parasolCount = spec.formal ? 0 : rndInt(2, 4);
   for (let i = 0; i < parasolCount; i++) {
     const [x, z] = ctx.spot(-10, 10, -S / 2 + 10, S / 2 - 10, 7);
     ctx.place(K.parasolProp({ variant: chance(0.5) ? 'a' : 'b' }), x, z, rnd(0, Math.PI * 2), {});
@@ -1667,31 +1682,31 @@ export const SPECS = {
   wholesaleMarket: { layout: 'yard', structure: 'shed', streetLen: 92 },
   construction: { layout: 'yard', structure: 'site', streetLen: 86 },
   factoryZone: { layout: 'yard', structure: 'shed', streetLen: 104 },
-  school: { layout: 'plaza', structure: 'teaching', streetLen: 104, plazaW: 50, mainW: 40, gym: true, gate: true, shortName: '大学城' },
+  school: { layout: 'plaza', structure: 'teaching', streetLen: 104, plazaW: 50, mainW: 40, gym: true, formal: true, shortName: '大学城' },
   commercialDist: { layout: 'avenue', structure: 'tower', streetLen: 108, roadW: 16 },
   techPark: { layout: 'plaza', structure: 'tower', streetLen: 104, plazaW: 52, mainW: 26, flagPole: true },
-  hospital: { layout: 'compound', structure: 'tower', streetLen: 96, courtW: 38, blocks: 3, gate: true, shortName: '医院' },
+  hospital: { layout: 'compound', structure: 'tower', streetLen: 96, courtW: 38, blocks: 3, formal: true, shortName: '医院' },
   bank: { layout: 'avenue', structure: 'tower', streetLen: 78, roadW: 14 },
-  park: { layout: 'plaza', structure: 'hall', streetLen: 96, plazaW: 56, mainW: 17, mainH: 8, gate: true, shortName: '公园' },
-  community_center: { layout: 'plaza', structure: 'hall', streetLen: 84, plazaW: 46, mainW: 26, gate: true, shortName: '社区中心' },
+  park: { layout: 'plaza', structure: 'hall', streetLen: 96, plazaW: 56, mainW: 17, mainH: 8, formal: true, shortName: '公园' },
+  community_center: { layout: 'plaza', structure: 'hall', streetLen: 84, plazaW: 46, mainW: 26, formal: true, shortName: '社区中心' },
   night_market: { layout: 'lane', structure: 'lowRise', streetLen: 96, roadW: 10, maxFloors: 4 },
-  trainingCenter: { layout: 'compound', structure: 'hall', streetLen: 82, courtW: 34, blocks: 2, gate: true, shortName: '培训中心' },
+  trainingCenter: { layout: 'compound', structure: 'hall', streetLen: 82, courtW: 34, blocks: 2, formal: true, shortName: '培训中心' },
   suburb: { layout: 'lane', structure: 'lowRise', streetLen: 110, roadW: 11, maxFloors: 3 },
-  luxury_community: { layout: 'compound', structure: 'tower', streetLen: 104, courtW: 40, blocks: 4, gate: true, shortName: '高档小区' },
-  old_community: { layout: 'compound', structure: 'slab', streetLen: 96, courtW: 38, blocks: 3, floors: 6, gate: true, shortName: '老旧小区' },
-  gov_office: { layout: 'plaza', structure: 'hall', streetLen: 96, plazaW: 50, mainW: 36, flagPole: true, gate: true, shortName: '政务大厅' },
-  court: { layout: 'plaza', structure: 'hall', streetLen: 92, plazaW: 50, mainW: 32, flagPole: true, hipRoof: true, gate: true, shortName: '人民法院' },
-  job_market: { layout: 'plaza', structure: 'hall', streetLen: 88, plazaW: 46, mainW: 30, gate: true, shortName: '人才市场' },
+  luxury_community: { layout: 'compound', structure: 'tower', streetLen: 104, courtW: 40, blocks: 4, formal: true, shortName: '高档小区' },
+  old_community: { layout: 'compound', structure: 'slab', streetLen: 96, courtW: 38, blocks: 3, floors: 6, formal: true, shortName: '老旧小区' },
+  gov_office: { layout: 'plaza', structure: 'hall', streetLen: 96, plazaW: 50, mainW: 36, flagPole: true, formal: true, shortName: '政务大厅' },
+  court: { layout: 'plaza', structure: 'hall', streetLen: 92, plazaW: 50, mainW: 32, flagPole: true, hipRoof: true, formal: true, shortName: '人民法院' },
+  job_market: { layout: 'plaza', structure: 'hall', streetLen: 88, plazaW: 46, mainW: 30, formal: true, shortName: '人才市场' },
   entertainment: { layout: 'avenue', structure: 'tower', streetLen: 96, roadW: 15 },
-  temple: { layout: 'plaza', structure: 'pavilion', streetLen: 84, plazaW: 46, mainW: 28, hipRoof: true, gate: true, shortName: '古寺' },
-  library: { layout: 'plaza', structure: 'hall', streetLen: 88, plazaW: 48, mainW: 32, gate: true, shortName: '图书馆' },
-  gym: { layout: 'plaza', structure: 'hall', streetLen: 100, plazaW: 54, mainW: 30, gate: true, shortName: '体育馆' },
+  temple: { layout: 'plaza', structure: 'pavilion', streetLen: 84, plazaW: 46, mainW: 28, hipRoof: true, formal: true, shortName: '古寺' },
+  library: { layout: 'plaza', structure: 'hall', streetLen: 88, plazaW: 48, mainW: 32, formal: true, shortName: '图书馆' },
+  gym: { layout: 'plaza', structure: 'hall', streetLen: 100, plazaW: 54, mainW: 30, formal: true, shortName: '体育馆' },
   internet_cafe: { layout: 'lane', structure: 'lowRise', streetLen: 72, roadW: 9, maxFloors: 5 },
   logistics_park: { layout: 'yard', structure: 'shed', streetLen: 108 },
   auto_city: { layout: 'avenue', structure: 'tower', streetLen: 100, roadW: 18 },
   flower_bird_market: { layout: 'lane', structure: 'lowRise', streetLen: 88, roadW: 11, maxFloors: 3 },
   flea_market: { layout: 'lane', structure: 'lowRise', streetLen: 84, roadW: 10, maxFloors: 3 },
-  vegetable_market: { layout: 'compound', structure: 'hall', streetLen: 80, courtW: 36, blocks: 2, gate: true, stalls: true, shortName: '菜市场' },
+  vegetable_market: { layout: 'compound', structure: 'hall', streetLen: 80, courtW: 36, blocks: 2, formal: true, stalls: true, shortName: '菜市场' },
 };
 
 export const LAYOUT_KIND = {

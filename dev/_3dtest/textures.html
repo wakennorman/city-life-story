@@ -13,8 +13,19 @@
 <body>
 <div id="row"></div>
 <script type="importmap">
-{ "imports": { "three": "/node_modules/three/build/three.module.js" } }
+{ "imports": {
+  "three": "/node_modules/three/build/three.module.js",
+  "three/examples/jsm/": "/node_modules/three/examples/jsm/"
+} }
 </script>
+<!-- ★ importmap 必须把 `three/examples/jsm/` 也映射上（2026-09-19 踩过）。
+     本页是**直接以原生 ES 模块导入源码**的（不走 bundle），于是模块图会一路
+     链到 materials.js → textures.js → assets.js → GLTFLoader，
+     而 GLTFLoader 用的是裸路径 `three/examples/jsm/loaders/GLTFLoader.js`。
+     只映射 `three` 的话，浏览器报
+       Failed to resolve module specifier "three/examples/jsm/loaders/GLTFLoader.js"
+     而**整个模块图加载失败** —— 症状是 __texSheetDone 永不置位、
+     verify-textures 门禁 30 秒超时，看上去像"贴图生成挂了"，其实一个字都没跑。 -->
 <script type="module">
 import * as M from '/src/app/3d/materials.js';
 

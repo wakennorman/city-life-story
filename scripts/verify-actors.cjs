@@ -95,6 +95,14 @@ function rebuild() {
     let seed = 12345;
     const rng = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
     const g = S.buildHuman(rng, 1);
+    /* ★ 脸的画布尺寸**必须问实现**，不能在这里抄一份魔数。
+       踩过（2026-09-19）：actors.js 给脸加了 4 倍超采样（FACE_SS=2，画布
+       512×256 → 1024×512），而这里还写着 `width === 512` ——
+       于是"头上有脸贴图"直接判成"没有带头贴图的材质"，
+       后面两条取像素的断言也跟着 null。**产品是好的，是断言过期了。**
+       这正是本项目反复强调的"判据必须来自单一真源"：
+       尺寸抄一份、采样倍率再抄一份，改一处忘一处就假红（或更糟：假绿）。 */
+    const FD = S.faceDebug();
     let meshes = 0;
     const geos = [];
     let faceMat = null, faceMeshY = null;
@@ -104,7 +112,7 @@ function rebuild() {
       geos.push(o.geometry.parameters || {});
       /* 带头贴图的材质 = 脸。同时记下它挂在哪个 y（头的世界高度）。 */
       if (o.material && o.material.map && o.material.map.image
-        && o.material.map.image.width === 512 && o.material.map.image.height === 256) {
+        && o.material.map.image.width === FD.texW && o.material.map.image.height === FD.texH) {
         faceMat = o.material.map;
         faceMeshY = o.position.y;
       }
@@ -122,16 +130,19 @@ function rebuild() {
     if (faceMat && faceMat.image) {
       const c = faceMat.image;
       const ctx2 = c.getContext('2d');
+      /* ★ faceX / faceY 返回的是**设计空间**坐标（512×256），而画布按 FACE_SS
+         放大过 —— 取样前必须乘同一个倍率，否则取到的是画布左上角那一小块
+         （纯白底），"眼睛是深色"会假红、"后脑留白"会假绿。倍率同样问 faceDebug()。 */
       const px = (x, y) => {
-        const d = ctx2.getImageData(Math.round(x), Math.round(y), 1, 1).data;
+        const d = ctx2.getImageData(Math.round(x * FD.ss), Math.round(y * FD.ss), 1, 1).data;
         return (d[0] + d[1] + d[2]) / 3;
       };
       /* 眼睛：世界 (±0.040, 1.622) → 画布坐标（用 actors.js 同款公式）。 */
       eyeDark = px(S.faceX(0.040, 1.622), S.faceY(1.622));
       /* 后脑：u = 0.75（phi=3π/2 即 -Z）。整行取三个点看有没有被画过东西。 */
-      const b1 = px(0.75 * 512, S.faceY(1.60));
-      const b2 = px(0.75 * 512, S.faceY(1.66));
-      const b3 = px(0.75 * 512, S.faceY(1.55));
+      const b1 = px(0.75 * FD.desW, S.faceY(1.60));
+      const b2 = px(0.75 * FD.desW, S.faceY(1.66));
+      const b3 = px(0.75 * FD.desW, S.faceY(1.55));
       backWhite = (b1 + b2 + b3) / 3;
     }
     void faceMeshY;

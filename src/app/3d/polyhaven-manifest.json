@@ -133,21 +133,11 @@
       "note": "夜间"
     }
   },
-  "textures": {
-    "brick-wall": {
-      "file": "brick-wall.jpg"
-    },
-    "concrete-wall": {
-      "file": "concrete-wall.jpg"
-    },
-    "paving": {
-      "file": "paving.jpg"
-    }
-  },
+  "textures": {},
   "counts": {
     "models": 13,
     "groups": 4,
     "hdri": 4,
-    "textures": 3
+    "textures": 0
   }
 }
