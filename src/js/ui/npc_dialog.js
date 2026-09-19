@@ -113,7 +113,10 @@ function showNpcTalk(opts) {
     var img = document.createElement("img");
     img.className = "npc-talk-portrait";
     img.alt = npc.name || "NPC";
-    img.src = npc.avatar;
+    /* ★ 缓存破坏（2026-09-19）：立绘被批量去水印后，浏览器仍按旧 URL
+       命中**内存/磁盘缓存**，玩家会一直看到带水印的旧图（恒稳实测）。
+       加一次版本参数强制重新拉取。以后立绘再有批量处理，把这个串改一次。 */
+    img.src = npc.avatar + "?v=20260919";
     img.onerror = function () {
       /* 降级铁律：拿不到图绝不空白、绝不抛（见文件头注释） */
       var cv = document.createElement("canvas");

@@ -29,6 +29,7 @@
     "shot:actors": "node scripts/shot-actors.cjs",
     "verify:face": "node scripts/verify-face.cjs",
     "verify:npc-dialog": "node scripts/verify-npc-dialog.cjs",
+    "avatars:dewm": "python scripts/strip_avatar_watermark.py",
     "shot:ai-placement": "node scripts/shot-ai-placement.cjs",
     "shot:polyhaven-placement": "node scripts/shot-polyhaven-placement.cjs",
     "pack:polyhaven-glb": "node scripts/pack-polyhaven-glb.cjs",
