@@ -854,3 +854,431 @@ body.s3-first-mode .modal-overlay textarea {
 }
 
 
+
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   §3D-UI  游戏内界面皮肤（2026-09-19）
+   ──────────────────────────────────────────────────────────────────────────────
+   恒稳的要求原话：
+     「我一点开网站就进入 3D 游戏页面，这个时候再弹出这些提示，
+       这些提示要融入游戏画面中，左上角或者右上角或者中间都可以，
+       让玩家点击后才能跳过。」
+
+   上一版的问题（就是他截图里那两张）：3D 其实已经在跑了，
+   但**所有提示都还是网页应用的弹窗** —— 米白卡片 + 70% 灰遮罩 + 16px 圆角
+   + Segoe UI 字体，浮在一张 3D 画面上。一眼就能看出"这是网页套了一层 3D"。
+
+   ── 这一节的处置只有一句话 ──
+   **给 3D 模式换一整套 UI 词汇表**，而且全部用 CSS 作用域做。
+
+   ── 为什么不去改那些弹窗的 JS ──
+   游戏的弹窗分散在 11 处 `document.body.appendChild`（main.js / ui/modal.js /
+   events_core.js / actions_extra.js / critical.js / daily_report.js /
+   companyHistory.js / world_news_intro.js …）。逐个改的实现必然漏 ——
+   而漏掉的那个弹窗，会在整局游戏里稳定地"长得像网页"，且不报任何错。
+   CSS 的作用域是**按类生效**的，漏不了。
+
+   ── 为什么改 CSS 变量就够了 ──
+   这些弹层的配色全部走 `var(--bg-secondary)` / `var(--text-primary)` 这类变量
+   （定义在 style.css 的 :root）。在 `body.s3-first-mode` 这一层重新赋值，
+   整棵子树的配色自动切到暗色游戏风 —— 一处生效、零遗漏，
+   而 **2D 模式（`?mode=2d`）完全不受影响**（变量只在这个 body 类下被覆盖）。
+
+   ── 色彩取值不是随手挑的 ──
+   三个基准色都取自 3D 层**已经存在**的值，保证 HUD 与弹层是同一套语言：
+     暖白文字  #ece7db  ← 同 .s3-first-exit 的 #e8e4d8
+     金 高光   #d8b45a  ← 同 .s3-first-exit:hover 的 rgba(216,180,90,…)
+     近黑底    #101311  ← 同 .s3h-tray 的 rgba(16,19,17,…)
+   凭空发明的第三套配色，会让"游戏本体"和"弹窗"看起来像两个团队做的。
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+body.s3-first-mode {
+  /* 底色：暖黑。--bg-primary 同时也是 body 的 background（style.css:86），
+     所以这里顺带把"3D 首帧之前的白底"也一并解决 —— 否则 WebGL 初始化那
+     一两百毫秒里，玩家会看到熟悉的米白网页底色闪一下。 */
+  --bg-primary: #060807;
+  --bg-secondary: rgba(18, 21, 19, 0.90);
+  --bg-card: rgba(26, 31, 28, 0.78);
+  --bg-card-hover: rgba(38, 45, 40, 0.86);
+  --bg-sidebar: rgba(18, 21, 19, 0.90);
+  --bg-input: rgba(8, 10, 9, 0.72);
+
+  /* 描边：金线。比 3D HUD 的 .s3-first-exit 稍弱一档 ——
+     弹窗面积大，同样透明度铺满一整圈会显得刺眼。 */
+  --border: rgba(216, 180, 90, 0.26);
+  --border-light: rgba(232, 228, 216, 0.14);
+
+  --text-primary: #ece7db;
+  --text-secondary: #bab4a5;
+  --text-muted: #8f8a7c;
+
+  --accent: #d8b45a;
+  --accent-hover: #e9ca78;
+  --accent-glow: rgba(216, 180, 90, 0.16);
+
+  --success: #7cc48a;
+  --success-bg: rgba(124, 196, 138, 0.13);
+  --danger: #e0806a;
+  --danger-bg: rgba(224, 128, 106, 0.13);
+  --warning: #e0b660;
+  --warning-bg: rgba(224, 182, 96, 0.13);
+  --info: #7fb0d8;
+
+  /* 圆角整体收小。这是"游戏感"里最廉价、也最有效的一条 ——
+     16px 大圆角是移动端 App 的语言，5~9px 才是游戏 UI 的。 */
+  --radius-sm: 3px;
+  --radius-md: 5px;
+  --radius-lg: 7px;
+  --radius-xl: 9px;
+}
+
+/* ── 遮罩：从「糊死一整屏」改成「压暗 + 轻微失焦」 ──────────────────────────
+   数值依据（不是随手挑的）：
+     · 原 .modal-overlay 是 rgba(0,0,0,0.7)。3D 场景本身已经偏暗，
+       再叠 70% 纯黑，画面几乎全黑 —— 玩家读到的不是"世界被暂停了"，
+       而是"游戏黑屏了"。
+     · 中心亮、边缘暗的径向渐变：视线自然收到弹窗上，四角仍透出城市。
+       这不是装饰 —— 它替代了原来那层"全屏不透明"的**视觉聚焦功能**，
+       所以遮罩可以整体减淡而不失去焦点。
+     · blur 只给 1.5px。完全不加，背后街道的杂线会干扰阅读；
+       给到 6px 以上（= 原 world-news 的值），那块就成了一片磨砂玻璃，
+       与"世界还在那里"是相反的意思。 */
+body.s3-first-mode .modal-overlay {
+  background: radial-gradient(ellipse at center,
+    rgba(4, 6, 5, 0.44) 0%,
+    rgba(4, 6, 5, 0.62) 62%,
+    rgba(4, 6, 5, 0.74) 100%);
+  backdrop-filter: blur(1.5px) saturate(0.92);
+}
+
+/* ── 弹窗本体：暗色玻璃 + 金边 ────────────────────────────────────────────
+   ★ 选择器为什么写这么长：
+     style.css 里有 `.modal-overlay.event-modal .modal-box`（特异性 0,3,0）
+     和 `.spring-fest-modal .modal-box` 这类**更高特异性**的覆写，
+     它们会盖掉任何 (0,2,x) 的规则 —— 而那两个正是事件弹窗，
+     也就是玩家见得最多的那种。所以这里逐个点名 + 前缀 body，
+     把特异性顶到 (0,4,1) 以上，而不是靠 `!important` 硬压
+     （!important 会让后续想微调某个弹窗时无处下手）。 */
+body.s3-first-mode .modal-overlay .modal-box,
+body.s3-first-mode .event-overlay .modal-box,
+body.s3-first-mode .tutorial-overlay .modal-box,
+body.s3-first-mode .spring-fest-modal .modal-box,
+body.s3-first-mode .company-history-modal .modal-box,
+body.s3-first-mode .acquisition-modal .modal-box,
+body.s3-first-mode .financial-report-modal .modal-box {
+  background: linear-gradient(180deg,
+    rgba(30, 34, 31, 0.95) 0%,
+    rgba(16, 19, 17, 0.97) 100%);
+  border: 1px solid rgba(216, 180, 90, 0.30);
+  border-top: 2px solid rgba(216, 180, 90, 0.62);
+  border-radius: var(--radius-xl);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.55),
+    0 24px 60px rgba(0, 0, 0, 0.62),
+    0 0 42px rgba(216, 180, 90, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(14px);
+  color: var(--text-primary);
+}
+
+body.s3-first-mode .modal-box h2 {
+  color: #f2ead6;
+  letter-spacing: 0.6px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(216, 180, 90, 0.18);
+}
+
+/* 滚动条：默认的亮色滚动条压在暗面板上是最刺眼的"网页残迹"之一 */
+body.s3-first-mode .modal-box::-webkit-scrollbar { width: 8px; }
+body.s3-first-mode .modal-box::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.3); }
+body.s3-first-mode .modal-box::-webkit-scrollbar-thumb {
+  background: rgba(216, 180, 90, 0.30);
+  border-radius: 4px;
+}
+body.s3-first-mode .modal-box::-webkit-scrollbar-thumb:hover {
+  background: rgba(216, 180, 90, 0.5);
+}
+
+/* ── 按钮 ────────────────────────────────────────────────────────────────
+   ★ `!important` 在这里是**必需的**，而且是唯一一处：
+     ui/modal.js:128-132 给主按钮写死了内联 `btnEl.style.color = "#fff"`。
+     内联样式优先级高于任何选择器，不用 !important 就压不掉 ——
+     而白字压在金底上对比度只有 1.9:1，基本看不清。 */
+body.s3-first-mode .modal-box .btn {
+  background: rgba(216, 180, 90, 0.10);
+  border: 1px solid rgba(216, 180, 90, 0.32);
+  color: #ece7db !important;
+  letter-spacing: 0.5px;
+  border-radius: var(--radius-md);
+  transition: background 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
+}
+body.s3-first-mode .modal-box .btn:hover {
+  background: rgba(216, 180, 90, 0.22);
+  border-color: rgba(216, 180, 90, 0.62);
+  box-shadow: 0 0 18px rgba(216, 180, 90, 0.20);
+}
+body.s3-first-mode .modal-box .btn-primary {
+  background: linear-gradient(180deg, #e0bd63 0%, #b2903a 100%);
+  border-color: rgba(240, 214, 140, 0.72);
+  color: #14160f !important;
+  font-weight: 700;
+  text-shadow: none;
+}
+body.s3-first-mode .modal-box .btn-primary:hover {
+  background: linear-gradient(180deg, #eccb76 0%, #c09c44 100%);
+  box-shadow: 0 0 22px rgba(216, 180, 90, 0.34);
+}
+body.s3-first-mode .modal-box .btn-success {
+  background: linear-gradient(180deg, rgba(124, 196, 138, 0.92) 0%, rgba(74, 140, 88, 0.92) 100%);
+  border-color: rgba(150, 214, 164, 0.6);
+  color: #0d1410 !important;
+  font-weight: 700;
+}
+body.s3-first-mode .modal-box .btn-danger {
+  background: linear-gradient(180deg, rgba(224, 128, 106, 0.92) 0%, rgba(170, 76, 56, 0.92) 100%);
+  border-color: rgba(236, 156, 136, 0.6);
+  color: #180c09 !important;
+  font-weight: 700;
+}
+body.s3-first-mode .modal-box .btn-warning {
+  background: linear-gradient(180deg, rgba(224, 182, 96, 0.92) 0%, rgba(170, 132, 52, 0.92) 100%);
+  border-color: rgba(238, 202, 128, 0.6);
+  color: #16120a !important;
+  font-weight: 700;
+}
+
+/* 输入框：暗底 + 金框，聚焦时给一圈柔光 */
+body.s3-first-mode .modal-box input,
+body.s3-first-mode .modal-box select,
+body.s3-first-mode .modal-box textarea {
+  background: rgba(6, 8, 7, 0.72) !important;
+  border: 1px solid rgba(216, 180, 90, 0.28) !important;
+  color: #ece7db !important;
+  border-radius: var(--radius-sm);
+}
+body.s3-first-mode .modal-box input:focus,
+body.s3-first-mode .modal-box select:focus,
+body.s3-first-mode .modal-box textarea:focus {
+  outline: none;
+  border-color: rgba(216, 180, 90, 0.66) !important;
+  box-shadow: 0 0 0 2px rgba(216, 180, 90, 0.16);
+}
+
+/* 弹窗里内联写死的浅色小卡片（存档槽、公司卡、收益/评估块…）——
+   它们用的是 `style="background:var(--bg-card)"` 或半透明 rgba，
+   变量化的那部分已经跟着变了；这里只补"选中/悬停"的反馈色。 */
+body.s3-first-mode .modal-box .save-slot-card:hover,
+body.s3-first-mode .modal-box .load-slot-card:hover,
+body.s3-first-mode .modal-box .company-card:hover {
+  border-color: rgba(216, 180, 90, 0.6) !important;
+  background: rgba(216, 180, 90, 0.09) !important;
+}
+
+/* ══ 开局「今日头条」 ══════════════════════════════════════════════════════
+   这一张是恒稳截的第一张图，也是最典型的一处：
+   原 .world-news-overlay 是 `rgba(245,241,232,0.93)` + `blur(6px)` ——
+   **一层 93% 不透明的米白**，把 3D 整个盖死。所以他看到的背景是
+   "浅灰毛玻璃"，而不是城市。他说的"还是有这些网页的画面"，
+   指的正是这一层。（3D 其实一直在下面跑着。）
+   ────────────────────────────────────────────────────────────────────────── */
+body.s3-first-mode .world-news-overlay {
+  background: radial-gradient(ellipse at center,
+    rgba(4, 6, 5, 0.40) 0%,
+    rgba(4, 6, 5, 0.60) 62%,
+    rgba(4, 6, 5, 0.76) 100%);
+  backdrop-filter: blur(1.5px) saturate(0.9);
+}
+
+body.s3-first-mode .world-news-panel {
+  background: linear-gradient(180deg,
+    rgba(28, 32, 29, 0.95) 0%,
+    rgba(14, 17, 15, 0.97) 100%);
+  border: 1px solid rgba(216, 180, 90, 0.30);
+  border-top: 2px solid rgba(216, 180, 90, 0.62);
+  border-radius: var(--radius-xl);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.55),
+    0 24px 60px rgba(0, 0, 0, 0.62),
+    0 0 42px rgba(216, 180, 90, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(14px);
+}
+
+body.s3-first-mode .world-news-header {
+  background: linear-gradient(180deg,
+    rgba(44, 50, 45, 0.92) 0%,
+    rgba(24, 28, 25, 0.88) 100%);
+  border-bottom: 1px solid rgba(216, 180, 90, 0.34);
+}
+body.s3-first-mode .world-news-title {
+  color: #f2ead6;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+}
+body.s3-first-mode .world-news-subtitle {
+  color: var(--text-secondary);
+  border-top-color: rgba(216, 180, 90, 0.14);
+}
+body.s3-first-mode .world-news-date {
+  color: var(--text-secondary);
+  background: rgba(0, 0, 0, 0.35);
+  border-color: rgba(216, 180, 90, 0.25);
+}
+body.s3-first-mode .world-news-realtime-badge {
+  color: #ffb4a2;
+  background: rgba(224, 128, 106, 0.16);
+  border-color: rgba(224, 128, 106, 0.35);
+}
+
+body.s3-first-mode .world-news-item {
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(232, 228, 216, 0.10);
+  border-left: 3px solid rgba(216, 180, 90, 0.40);
+  border-radius: var(--radius-md);
+}
+body.s3-first-mode .world-news-item:hover {
+  background: rgba(216, 180, 90, 0.09);
+  border-color: rgba(216, 180, 90, 0.42);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+body.s3-first-mode .world-news-headline { color: #f0ebdd; }
+body.s3-first-mode .world-news-detail { color: var(--text-secondary); }
+body.s3-first-mode .world-news-tag {
+  color: #e6d6a6;
+  background: rgba(216, 180, 90, 0.16);
+  border-color: rgba(216, 180, 90, 0.30);
+}
+body.s3-first-mode .world-news-effect {
+  color: #d8cba0;
+  background: rgba(216, 180, 90, 0.10);
+  border-color: rgba(216, 180, 90, 0.20);
+}
+body.s3-first-mode .world-news-footer {
+  background: rgba(10, 13, 11, 0.92);
+  border-top-color: rgba(216, 180, 90, 0.24);
+}
+body.s3-first-mode .world-news-footer-text { color: var(--text-muted); }
+body.s3-first-mode .world-news-footer-text strong { color: var(--text-secondary); }
+body.s3-first-mode .world-news-start-btn {
+  background: linear-gradient(180deg, #e0bd63 0%, #b2903a 100%);
+  color: #14160f;
+  border-radius: var(--radius-md);
+  letter-spacing: 2px;
+  box-shadow: 0 6px 24px rgba(216, 180, 90, 0.28);
+}
+body.s3-first-mode .world-news-start-btn:hover {
+  background: linear-gradient(180deg, #eccb76 0%, #c09c44 100%);
+  box-shadow: 0 8px 30px rgba(216, 180, 90, 0.42);
+}
+
+/* ══ 欢迎屏 / 选模式 / 选剧本：从「整页 HTML」改成「浮在 3D 上的主菜单」 ══
+   这 4 张屏是 body 的直接子元素、height:100vh、本身没有背景 ——
+   而 3D 宿主 .s3-first 是 z-index:9000。不处理的话它们会被 canvas 整个盖住，
+   于是又回到"看不见欢迎页"的老问题。
+   这里给 9400（高于 3D、低于弹层 9500）+ 一层中心暗角：
+   文字区域清晰，四周透出城市。
+
+   ★ `pointer-events: none` + 子元素 auto：
+     玩家在欢迎页的空白处也能拖动转视角、滚轮缩放 —— 这是"我已经进到
+     这个 3D 世界里了"最直接的体感，而成本只是两行 CSS。
+     注意**不能**给整块设成 none 就完事：那样连「开始新游戏」都点不动。 */
+body.s3-first-mode .welcome-screen.s3-glass {
+  position: relative;
+  z-index: 9400;
+  gap: 18px;
+  background: radial-gradient(ellipse at center,
+    rgba(6, 8, 7, 0.74) 0%,
+    rgba(6, 8, 7, 0.46) 46%,
+    rgba(6, 8, 7, 0.12) 76%,
+    rgba(6, 8, 7, 0) 100%);
+  pointer-events: none;
+}
+body.s3-first-mode .welcome-screen.s3-glass > * {
+  pointer-events: auto;
+}
+
+body.s3-first-mode .welcome-title {
+  color: #e8c977;
+  font-size: 42px;
+  letter-spacing: 6px;
+  text-shadow:
+    0 0 30px rgba(216, 180, 90, 0.35),
+    0 4px 18px rgba(0, 0, 0, 0.85);
+}
+body.s3-first-mode .welcome-subtitle {
+  color: #d8d2c2;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
+}
+body.s3-first-mode .goal-item { color: #e0cfa0; }
+
+body.s3-first-mode .mode-card,
+body.s3-first-mode .scenario-card {
+  background: rgba(18, 22, 19, 0.84);
+  border-color: rgba(216, 180, 90, 0.22);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.5);
+}
+body.s3-first-mode .mode-card:hover,
+body.s3-first-mode .scenario-card:hover {
+  border-color: rgba(216, 180, 90, 0.58);
+  background: rgba(30, 36, 32, 0.9);
+  box-shadow:
+    0 16px 44px rgba(0, 0, 0, 0.6),
+    0 0 26px rgba(216, 180, 90, 0.16);
+}
+body.s3-first-mode .mode-card-title,
+body.s3-first-mode .scenario-card-title { color: #f0ebdd; }
+body.s3-first-mode .mode-card-brief,
+body.s3-first-mode .scenario-card-brief { color: var(--text-secondary); }
+
+/* 欢迎屏上的按钮：跟着暗色词汇表走（它们在 #app 之外，不继承 .modal-box 那条规则） */
+body.s3-first-mode .welcome-screen .btn {
+  background: rgba(216, 180, 90, 0.12);
+  border: 1px solid rgba(216, 180, 90, 0.34);
+  color: #ece7db;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+}
+body.s3-first-mode .welcome-screen .btn:hover {
+  background: rgba(216, 180, 90, 0.24);
+  border-color: rgba(216, 180, 90, 0.64);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.5), 0 0 20px rgba(216, 180, 90, 0.24);
+}
+body.s3-first-mode .welcome-screen .btn-primary {
+  background: linear-gradient(180deg, #e0bd63 0%, #b2903a 100%);
+  border-color: rgba(240, 214, 140, 0.7);
+  color: #14160f;
+  font-weight: 700;
+}
+
+/* ══ 舞台态（还没有 state）：HUD 只留退出按钮 ══════════════════════════════
+   主菜单背景上不该出现「第 1 天 · 上午 · ¥0 · 六条需求全空」——
+   那不是在展示游戏，是在展示一个坏掉了的状态。
+   玩家点「开始新游戏」建立 state 后，scene3d_bridge::exitStageMode 摘掉
+   .s3-stage，这些块同时解禁（不需要 JS 逐个显示，少一处会漏的同步点）。 */
+#scene3d-first.s3-stage .s3h-top,
+#scene3d-first.s3-stage .s3h-vitals,
+#scene3d-first.s3-stage .s3h-ap,
+#scene3d-first.s3-stage .s3h-tray,
+#scene3d-first.s3-stage .s3h-keys,
+#scene3d-first.s3-stage .s3h-prompt {
+  display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.s3-first-mode .modal-box .btn,
+  body.s3-first-mode .world-news-item { transition: none; }
+}
+
+/* 窄屏：欢迎屏的暗角在小屏上要更实一点 ——
+   小屏里 3D 可视面积本来就少，暗角再摊开就只剩一条缝。 */
+@media (max-width: 768px) {
+  body.s3-first-mode .welcome-screen.s3-glass {
+    background: radial-gradient(ellipse at center,
+      rgba(6, 8, 7, 0.82) 0%,
+      rgba(6, 8, 7, 0.66) 60%,
+      rgba(6, 8, 7, 0.30) 100%);
+  }
+  body.s3-first-mode .welcome-title { font-size: 30px; letter-spacing: 3px; }
+}

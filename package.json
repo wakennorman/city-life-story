@@ -11,6 +11,7 @@
     "verify:3d-geometry": "node scripts/verify-3d-hud-geometry.cjs",
     "verify:3d-live": "node scripts/verify-3d-live.cjs",
     "verify:3d-mobile": "node scripts/verify-3d-mobile.cjs",
+    "verify:3d-opening": "node scripts/verify-3d-opening.cjs",
     "verify:3d-shell": "node scripts/verify-3d-shell.cjs",
     "verify:actors": "node scripts/verify-actors.cjs",
     "verify:tasks": "node scripts/verify-tasks.cjs",

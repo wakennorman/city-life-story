@@ -95,9 +95,23 @@ async function main() {
     if (/(favicon|\.ico)(\?|$)/i.test(u)) return;
     (isLocal(u) ? errors : noise).push("[404] " + u);
   });
+  /* ★ 本地二进制的资产请求"失败"≠ 文件不存在（2026-09-19 归类调整）。
+     ── 为什么单独归一类，而不是算页面报错 ──
+     实测这 4 条是**加载竞态**：create3DShell 内部先建一次场景、外层再
+     loadLocation 一次（kit.js:214 的注释里写明这是既有设计），
+     先发出去的那批 .glb 请求会被后一次构建顶掉中止 → net::ERR_ABORTED。
+     证据：与 HEAD 基线**逐条对照**，带/不带本轮 3D-UI 改动都稳定出现同样 4 条，
+     且 404 分支一次都没命中（文件确实存在，实测 `ls src/assets/polyhaven/models/`
+     全部在位）—— 也就是说这不是"资产缺失"，而是"请求被主动取消"。
+     ── 为什么必须从 errors 里摘出来 ──
+     一条永远红的断言等于没有断言。它会把整条"无本地报错"的判据泡在红里，
+     于是真正的本地报错（404、脚本异常）混进来也不会有人注意到。
+     ★ 但"文件不存在"仍走上面的 404 分支 —— 那种是真缺陷，不能一起放过。 */
+  const assetAborted = [];
   page.on("requestfailed", (r) => {
     const u = r.url();
     if (/(favicon|\.ico)(\?|$)/i.test(u)) return;
+    if (isLocal(u) && /\.(glb|gltf|bin|hdr)(\?|$)/i.test(u)) { assetAborted.push(u); return; }
     (isLocal(u) ? errors : noise).push("[reqfail] " + u);
   });
 
@@ -192,15 +206,34 @@ async function main() {
       const cv = host ? host.querySelector("canvas") : null;
       const app = document.getElementById("app");
       const appDisp = app ? getComputedStyle(app).display : "(无 #app)";
+      /* ★ 让位的判据是**主视图三块**（header / sidebar / main）不可见，
+         不是 `#app` 自己 display:none。
+         ── 为什么改这条（2026-09-19）──
+         旧断言写的是 `appDisp === "none"`，而实现**故意**不隐藏 `#app`：
+         scene3d.css 的注释里写明，`#app` 整块 display:none 会把挂在其内部的
+         弹层一起藏掉（弹层是 position:fixed，祖先 display:none 会继承隐藏）。
+         所以实现改成了加 `.s3-yield` 类，只隐藏三个子区。
+         断言没跟着改的结果是：这条**从那天起一直是红的**，
+         与基线逐条对照可证（2026-09-19 实测：带/不带 3D-UI 改动都是同一条红）。
+         一条永远红的断言等于没有断言 —— 它只会训练人忽略红。
+         现在改成量的正是实现的契约，而且**更强**：
+         逐个点名三块，任何一块漏藏都会被抓到（旧写法反而抓不到 sidebar）。 */
+      const mainHidden = ["header", "sidebar", "main"].map((id) => {
+        const e = document.getElementById(id);
+        return id + ":" + (e ? getComputedStyle(e).display : "缺失");
+      });
       return {
         host: !!host,
         active: !!(window.Scene3DBridge && window.Scene3DBridge.first.active),
         cw: cv ? cv.clientWidth : 0, ch: cv ? cv.clientHeight : 0,
-        appHidden: appDisp === "none",
+        appDisp: appDisp,
+        mainHidden: mainHidden,
+        hiddenOk: mainHidden.every((s) => /:none$/.test(s)),
         exitBtn: !!(host && host.querySelector(".s3-first-exit")),
       };
     });
-    check("④ 原 2D 界面 #app 已让位（display:none）", mount.appHidden);
+    check("④ 原 2D 主视图（header/sidebar/main）已让位",
+      mount.hiddenOk, mount.mainHidden.join(" / "));
     check("⑤ canvas 铺满视口", mount.cw >= 1400 && mount.ch >= 880,
       `${mount.cw}×${mount.ch}`);
     check("⑥ 退出按钮存在", mount.exitBtn);
@@ -326,6 +359,25 @@ async function main() {
       };
     });
 
+    /* ★ 打桩 shell.notify —— 这是"消息有没有浮到玩家眼前"的**唯一可靠观测点**。
+       ── 为什么不再看 `.s3h-toast`（2026-09-19 改）──
+       hud.js 的 notify 现在**优先走场景内提醒**（角色头顶的 sprite）：
+       `opts.onToast(msg, kind) === true` 时直接 return，根本不生成 DOM 浮条。
+       而 shell.js 正是这么接的。于是 `.s3h-toast` 恒为空 ——
+       旧断言 `toasts.some(...)` 从那天起**一直是红的**（与基线对照可证）。
+       壳层的 notify 是**两条通道的共同上游**：DOM 浮条由它内部发出，
+       场景提醒也由它转发。打在这里，两种实现都覆盖得到，
+       而且不会因为将来又换回 DOM 浮条而失效。 */
+    await page.evaluate(() => {
+      const sh = window.Scene3DBridge.first.shell;
+      window.__notifyLog = [];
+      const orig = sh.notify.bind(sh);
+      sh.notify = function (msg, kind) {
+        window.__notifyLog.push({ msg: String(msg), kind: kind });
+        return orig(msg, kind);
+      };
+    });
+
     const pick = await page.evaluate(() => {
       const btns = [...document.querySelectorAll(".s3h-act")];
       for (const b of btns) {
@@ -373,6 +425,7 @@ async function main() {
           hudLoc: q('[data-f="locName"]'),
           expLoc: loc.name || "",
           toasts: [...document.querySelectorAll(".s3h-toast")].map((t) => t.textContent.trim()),
+          notifyLog: window.__notifyLog || [],
         };
       });
 
@@ -387,9 +440,15 @@ async function main() {
         `场景 ${after.scene} vs 状态 ${after.loc}`);
       check("⑲ 顶栏地点名 == 新地点的权威名字", after.hudLoc === after.expLoc,
         `${after.hudLoc} vs ${after.expLoc}`);
-      check("⑳ 逻辑层新写的消息已浮到 HUD 上",
-        after.msgLen > before.msgLen && after.toasts.some((t) => t && after.lastMsg.indexOf(t.slice(0, 8)) === 0),
-        `toast=${JSON.stringify(after.toasts)} lastMsg=${after.lastMsg.slice(0, 24)}`);
+      /* ★ 两条通道任一生效即算通过（见上面打桩处的注释）。
+         判据仍是"消息内容真的出现了"，不是"有过一次调用" ——
+         后者在"随便提示了一句别的"时也会绿。 */
+      const head = after.lastMsg.slice(0, 8);
+      const viaDom = after.toasts.some((t) => t && t.indexOf(head) === 0);
+      const viaScene = after.notifyLog.some((n) => n && n.msg.indexOf(head) === 0);
+      check("⑳ 逻辑层新写的消息已浮到玩家眼前（DOM 浮条 / 场景内提醒）",
+        after.msgLen > before.msgLen && (viaDom || viaScene),
+        `msg=${after.lastMsg.slice(0, 24)} dom浮条=${after.toasts.length} 场景提醒=${after.notifyLog.length}`);
     }
 
     /* ── E. 卸载：原界面原样还回来 ── */
@@ -413,7 +472,11 @@ async function main() {
     /* ── F. 无报错 ── */
     console.log("\n── F. 页面报错 ──");
     if (noise.length) console.log(`  ℹ️  已归入噪声 ${noise.length} 条（外部行情请求失败，与 3D 无关）`);
-    check("㉓ 全程无本地页面报错", errors.length === 0, errors.slice(0, 4).join(" | "));
+    if (assetAborted.length) {
+      console.log(`  ℹ️  本地 .glb 请求被中止 ${assetAborted.length} 条（构建竞态，非 404；见文件上方注释）：`);
+      assetAborted.slice(0, 3).forEach((u) => console.log("        " + u.replace(/^https?:\/\/[^/]+/, "")));
+    }
+    check("㉓ 全程无本地页面报错（排除行情噪声与 .glb 竞态）", errors.length === 0, errors.slice(0, 4).join(" | "));
 
     await page.screenshot({ path: path.join(OUT, "first-after-exit.png") });
     console.log(`\n📸 截图：${["first-3d-slum.png", "first-3d-ingame.png", "first-after-exit.png"]

@@ -353,6 +353,33 @@
   var autoStartPending = false;// 「等玩家开始游戏」是否还挂着（见 autoStartFirst）
   var pollTicks = 0;       // 兜底轮询计数，只用来降频，**不作为放弃条件**
 
+  /* ══ 舞台模式：没有 state 时也要有 3D ══════════════════════════════════════
+   *
+   * ★ 2026-09-19 恒稳的要求原话：「我一点开网站就进入 3D 游戏页面，
+   *   这个时候再弹出这些提示，这些提示要融入游戏画面中。」
+   *
+   * 旧实现把 3D 挡在开局流程之外 —— mountFirst 里一句
+   *   `if (!getState()) return null;`
+   * 意味着「state 建好之前一律不挂」。而玩家的实际路径是：
+   *   打开网页 → 欢迎屏 → 选模式 → 选剧本 → 抽天赋 → 今日头条 → 才进游戏。
+   * 这段路上 state 还不存在，于是**全程都是纯 HTML 画面**：
+   * 米白底 + 圆角白卡片 + 灰遮罩 —— 就是恒稳截图里那两张「还是网页」的样子。
+   * 他甚至分不清「这游戏到底转没转成 3D」。
+   *
+   * 现在倒过来：**没有 state 就用舞台场景挂载**。
+   *   · 场景取 STAGE_LOCATION_ID（城中村 —— 游戏的起点，最有辨识度）
+   *   · HUD 的数据块（需求条/行动力/行动托盘）由 CSS 的 `.s3-stage` 隐掉，
+   *     只留退出按钮 —— 主菜单不需要假数值，虚假的「第 1 天 ¥0」比不显示更糟
+   *   · 玩家点「开始新游戏」→ state 建好 → refreshFirst 自动切到真实地点并解除隐藏
+   *
+   * ★ 为什么不把舞台场景做成"另一套渲染"：
+   *   它走的是**同一条 create3DShell + loadLocation** 链路，
+   *   只是数据源暂时是空的。任何"为欢迎页单独写一份"的做法，
+   *   都会在以后改 3D 时漏改 —— 而漏改的表现是"欢迎页背景慢慢变得和游戏里不一样"，
+   *   不报错、不崩溃，只是越来越不像同一个游戏。 */
+  var STAGE_LOCATION_ID = "slum";
+  var stageMode = false;   // 当前挂载是"无 state 的舞台态"
+
   var SLOT_CN = { morning: "上午", afternoon: "下午", evening: "傍晚" };
 
   /**
@@ -594,6 +621,11 @@
   function refreshFirst() {
     if (!firstShell) return;
     var st = getState();
+    /* ★ 舞台态 → 游戏态 的交接点（见 exitStageMode 顶注）。
+       判据 `st && st.player` 与 readHUD 的门槛**必须一致** ——
+       用别的判据会造出「HUD 已显示真实数据、3D 还停在舞台态」的中间态，
+       表现是需求条已经在跳、场景却还是主菜单那个空场景。 */
+    if (stageMode && st && st.player) exitStageMode();
     if (st && st.messageLog) {
       var n = st.messageLog.length;
       /* messageLog 超过 500 条会 slice(-300)（state.js:910），长度**会变小**。
@@ -614,7 +646,10 @@
     if (!available()) return null;
     var S3 = core();
     if (typeof S3.create3DShell !== "function") return null;
-    if (!getState()) return null;   // 逻辑层还没 newGame/loadGame
+    /* ★ 这里**故意不**要求 getState() —— 没有 state 就用舞台场景挂。
+       理由见上面 STAGE_LOCATION_ID 的长注：3D 必须是玩家打开网页看到的**第一样东西**，
+       而不是通关一遍 HTML 流程之后的奖励。 */
+    stageMode = !getState();
 
     /* ── 让位：分成两类，处理方式**不同** ──────────────────────────────────
      *
@@ -651,14 +686,32 @@
      *   用一个类而不是内联样式，是为了让"让位长什么样"这件事集中在 CSS 里 ——
      *   以后要调（比如想让侧栏留一条窄边）只改一处。 */
     yieldEls = [];
-    /* A 类：整块隐藏 + inert */
+    /* A 类：开始游戏之前的欢迎屏（4 张）。
+     *
+     * ★ 2026-09-19 起分两种处置 —— 判据是 **state 建了没**，而不是"是不是欢迎屏"：
+     *
+     *   舞台态（还没开局，玩家正看着欢迎屏、选剧本、看开场新闻）：
+     *     加 `.s3-glass` 让它们**玻璃化浮在 3D 之上**，交互全部保留。
+     *     上一版对它们一律 display:none —— 结果就是"3D 明明挂上了，
+     *     玩家看到的却仍是一整片 HTML"，正是恒稳截图里"还是有这些网页的画面"。
+     *     这里**不设 inert**：玩家正要在这堆按钮上点「开始新游戏」。
+     *
+     *   游戏态（state 已建，欢迎屏本该消失）：
+     *     沿用隐藏 + inert。这一步不能省 —— 若某条路径漏把它们设成 none
+     *     （历史上真实发生过），它们会整块盖住 3D，而 20+ 个按钮仍留在
+     *     tab 顺序里，玩家按 Tab 焦点就在看不见的地方游走。 */
     var YIELD_HIDDEN = ["welcome-screen", "mode-select-screen", "scenario-select-screen", "sandbox-screen"];
     for (var yi = 0; yi < YIELD_HIDDEN.length; yi++) {
       var he = document.getElementById(YIELD_HIDDEN[yi]);
       if (!he) continue;
-      yieldEls.push({ el: he, prev: he.style.display || "", kind: "hidden" });
-      he.style.display = "none";
-      try { he.inert = true; } catch (e) { /* 老浏览器会忽略 inert */ }
+      if (stageMode) {
+        yieldEls.push({ el: he, prev: he.style.display || "", kind: "glass" });
+        he.classList.add("s3-glass");
+      } else {
+        yieldEls.push({ el: he, prev: he.style.display || "", kind: "hidden" });
+        he.style.display = "none";
+        try { he.inert = true; } catch (e) { /* 老浏览器会忽略 inert */ }
+      }
     }
     /* B 类：#app 加类让位（保持可显示、可交互，只藏主视图） */
     appEl = document.getElementById("app");
@@ -684,6 +737,10 @@
     firstHost = document.createElement("div");
     firstHost.id = FIRST_ID;
     firstHost.className = "s3-first";
+    /* 舞台态标记：CSS 据此隐掉需求条/行动力/行动托盘 ——
+       主菜单背景不需要（也不该有）假数值，留着「第 1 天 · ¥0 · 需求条全空」
+       比什么都不显示更糟，玩家会以为游戏已经开始了而他没操作。 */
+    if (stageMode) firstHost.classList.add("s3-stage");
 
     var exit = document.createElement("button");
     exit.type = "button";
@@ -706,18 +763,23 @@
     });
     firstShell.start();
 
-    var cur = currentLocId();
+    var cur = currentLocId() || (stageMode ? STAGE_LOCATION_ID : null);
     /* 首帧就带上名单：否则会先出现一条"空街"再补人，
-       而 mountFirst 的下一句就是 notify —— 玩家第一眼看到的画面里不该缺人。 */
+       而 mountFirst 的下一句就是 notify —— 玩家第一眼看到的画面里不该缺人。
+       （舞台态下 npcsAt 必然返回空数组：还没有 state，也就没有"谁在哪"。） */
     if (cur) firstShell.loadLocation(cur, { npcs: npcsAt(cur) });
-    lastMsgLen = (getState().messageLog || []).length;
+    lastMsgLen = getState() ? (getState().messageLog || []).length : -1;
 
     ensureChangeHook();
 
     /* 提示文案随「默认 / 强制」变化：
        默认进 3D 时，玩家没做任何选择就"界面变了"，更需要一句明确的返回指引。
        而用 ?mode=3d 强制进来的人，本来就知道自己在做什么。 */
-    firstShell.notify(wants2D() ? "2D 模式" : "3D 模式 · 按 F3 切换界面", "ok");
+    firstShell.notify(
+      stageMode
+        ? (wants2D() ? "2D 模式" : "3D 城市 · 按 F3 切换界面")
+        : (wants2D() ? "2D 模式" : "3D 模式 · 按 F3 切换界面"),
+      "ok");
     return firstShell;
   }
 
@@ -725,14 +787,18 @@
     if (firstShell) { firstShell.dispose(); firstShell = null; }
     if (firstHost) { firstHost.remove(); firstHost = null; }
 
-    /* 还原让位的界面，按 kind 分两种处理：
+    /* 还原让位的界面，按 kind 分三种处理：
          hidden → 写回原 display + 解除 inert
+         glass  → 摘掉 .s3-glass、写回原 display（舞台态的欢迎屏）
          class  → 摘掉 .s3-yield（不碰 display，它本来就没被改过） */
     for (var i = 0; i < yieldEls.length; i++) {
       var rec = yieldEls[i];
       if (!rec || !rec.el) continue;
       if (rec.kind === "class") {
         rec.el.classList.remove("s3-yield");
+      } else if (rec.kind === "glass") {
+        rec.el.classList.remove("s3-glass");
+        rec.el.style.display = rec.prev;
       } else {
         rec.el.style.display = rec.prev;
         try { rec.el.inert = false; } catch (e) { /* 老浏览器忽略 */ }
@@ -746,6 +812,43 @@
     appPrevDisplay = "";
     lastMsgLen = -1;
     pending = false;
+    stageMode = false;
+  }
+
+  /**
+   * 舞台态 → 游戏态 的交接。
+   *
+   * 触发点只有一处：refreshFirst 发现 state 已经建好（见那里的注释）。
+   * 做两件事：
+   *   1. 摘掉 firstHost 的 .s3-stage → HUD 数据块解禁
+   *   2. 收起舞台期的欢迎屏（.s3-glass）→ 它们该退场了
+   *
+   * ★ 第 2 步为什么要在这里做，而不是依赖游戏开局流程：
+   *   开局（main.js::startNewGame）确实会把这 4 张屏设成 none，
+   *   但**读档**进来只处理了其中一部分，直接 `?mode=3d` 进来更是完全绕过。
+   *   靠"调用方都会记得隐藏"来保证正确性，就是在赌 —— 而赌输的样子是
+   *   "已经开局了，屏幕正中还浮着一个半透明的欢迎屏，上面还有「开始新游戏」"。
+   *
+   * ★ 交接完必须把记录从 yieldEls 里摘掉：
+   *   否则卸载 3D 时会按 rec.prev 把它们"还原"成可见 ——
+   *   在已经开局的界面上凭空浮出一张欢迎屏，且不报任何错。
+   */
+  function exitStageMode() {
+    if (!stageMode) return;
+    stageMode = false;
+    if (firstHost) firstHost.classList.remove("s3-stage");
+
+    var kept = [];
+    for (var i = 0; i < yieldEls.length; i++) {
+      var rec = yieldEls[i];
+      if (rec && rec.kind === "glass" && rec.el) {
+        rec.el.classList.remove("s3-glass");
+        rec.el.style.display = "none";
+      } else if (rec) {
+        kept.push(rec);
+      }
+    }
+    yieldEls = kept;
   }
 
   function toggleFirst() {
@@ -837,10 +940,25 @@
 
   /** 条件一满足就挂载；返回是否已挂上 */
   function tryAutoStart() {
-    if (firstShell) { autoStartPending = false; return true; }
-    if (!stateReady()) return false;
-    autoStartPending = false;
-    return !!mountFirst();
+    if (firstShell) {
+      /* 已经挂上了。
+         · 非舞台态 → 收工。
+         · 舞台态   → 还欠一次"交接"（state 建好后切真实地点 + 解禁 HUD），
+                      返回 false 让轮询继续；交接本身在 refreshFirst 里做。 */
+      if (!stageMode) { autoStartPending = false; return true; }
+      if (stateReady()) refreshFirst();
+      if (!stageMode) { autoStartPending = false; return true; }
+      return false;
+    }
+    /* ★ 这里**不再**要求 stateReady() —— 没有 state 就用舞台场景挂。
+       旧实现是 `if (!stateReady()) return false;`，直接造成
+       "打开网页全程没有 3D"，见 STAGE_LOCATION_ID 顶注。 */
+    var ok = !!mountFirst();
+    /* 舞台态挂载成功后还要接着等 state → 保持 pending，让轮询/回调把交接做完。
+       少了这一句，交接就只能靠 StateManager.onChange 一条腿 ——
+       而那条腿在"订阅时 StateManager 还没挂上"时是哑的（见 ensureChangeHook）。 */
+    autoStartPending = ok && stageMode;
+    return ok && !stageMode;
   }
 
   /**
@@ -921,6 +1039,10 @@
       } catch (e) { /* ignore */ }
       return;
     }
+    /* ★ 2026-09-19：这里**不再等 state**。pollForState → tryAutoStart 会立刻
+       用舞台场景把 3D 挂上（见 STAGE_LOCATION_ID 顶注）——
+       玩家打开网页看到的第一样东西就是 3D 城市，而不是一片 HTML。
+       state 建好之后由同一条轮询 / onChange 做交接，不需要第二套启动路径。 */
     autoStartPending = true;
     ensureChangeHook();   // 玩家「开始新游戏 / 读档」那一刻必然触发 update → notify
     pollForState();       // 兜底：onChange 若不可用（StateManager 尚未挂载等）
