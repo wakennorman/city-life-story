@@ -7,10 +7,20 @@
  * 用法：getAvailableActions() 末尾会调用 addExtraActions() 把这些行动合并进去
  */
 
+/* ★ 铁律：locations 里的每个 id 必须是真实地点 id（见 data/locations.js）。
+ *   同时 —— 行动的**专有地点**必须在列表里，否则会出现
+ *   「在体育馆门口被告知去公园健身」这种自相矛盾的提示。
+ *   回归网：tests/locationActionRules.test.cjs */
+var LOCATION_ACTION_RULE_ALIAS = {
+  // 行动 id → 它的专有地点 id（两者不同名时才需要登记）
+  internet_bar: "internet_cafe",
+};
+
 var LOCATION_ACTION_RULES = {
   internet_bar: {
-    locations: ["slum", "commercialDist", "techPark"],
-    hint: "去城中村、商业区或科技园附近的网吧",
+    // [修复] 原来漏了专有地点 internet_cafe（网吧）——在网吧里反而不能用"网吧上网"
+    locations: ["internet_cafe", "slum", "commercialDist", "techPark"],
+    hint: "去网吧、城中村、商业区或科技园",
   },
   salon_chat: {
     locations: ["slum", "commercialDist"],
@@ -25,8 +35,9 @@ var LOCATION_ACTION_RULES = {
     hint: "去大学城或培训中心报名夜校",
   },
   gym: {
-    locations: ["park", "commercialDist", "entertainment"],
-    hint: "去公园、商业区或娱乐城附近的健身场所",
+    // [修复] 原来漏了专有地点 gym（体育馆）——在体育馆里反而不能用"办健身卡锻炼"
+    locations: ["gym", "park", "commercialDist", "entertainment"],
+    hint: "去体育馆、公园、商业区或娱乐城",
   },
   movie: {
     locations: ["entertainment"],

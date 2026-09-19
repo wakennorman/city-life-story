@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-18T15:40:46.097Z",
+  "generatedAt": "2026-09-19T10:47:14.652Z",
   "source": "src/js/data/{locations,location_flavor,jobs,amenities,actions,goods}.js + src/js/phase1/actions_extra.js + src/js/core/illegal_actions.js",
   "count": 29,
   "categoryLabels": {
@@ -191,7 +191,7 @@
           "apCost": 20,
           "payEstimate": "智力+0.3, 随机技能XP",
           "costEstimate": 5,
-          "hint": "去城中村、商业区或科技园附近的网吧"
+          "hint": "去网吧、城中村、商业区或科技园"
         },
         {
           "id": "salon_chat",
@@ -1903,7 +1903,7 @@
           "apCost": 20,
           "payEstimate": "智力+0.3, 随机技能XP",
           "costEstimate": 5,
-          "hint": "去城中村、商业区或科技园附近的网吧"
+          "hint": "去网吧、城中村、商业区或科技园"
         },
         {
           "id": "salon_chat",
@@ -1923,7 +1923,7 @@
           "apCost": 20,
           "payEstimate": "体质+1, 敏捷+0.5",
           "costEstimate": 200,
-          "hint": "去公园、商业区或娱乐城附近的健身场所"
+          "hint": "去体育馆、公园、商业区或娱乐城"
         },
         {
           "id": "pharmacy",
@@ -2476,7 +2476,7 @@
           "apCost": 20,
           "payEstimate": "智力+0.3, 随机技能XP",
           "costEstimate": 5,
-          "hint": "去城中村、商业区或科技园附近的网吧"
+          "hint": "去网吧、城中村、商业区或科技园"
         }
       ],
       "illegal": [],
@@ -2883,7 +2883,7 @@
           "apCost": 20,
           "payEstimate": "体质+1, 敏捷+0.5",
           "costEstimate": 200,
-          "hint": "去公园、商业区或娱乐城附近的健身场所"
+          "hint": "去体育馆、公园、商业区或娱乐城"
         }
       ],
       "illegal": [],
@@ -3535,7 +3535,7 @@
           "apCost": 20,
           "payEstimate": "体质+1, 敏捷+0.5",
           "costEstimate": 200,
-          "hint": "去公园、商业区或娱乐城附近的健身场所"
+          "hint": "去体育馆、公园、商业区或娱乐城"
         },
         {
           "id": "movie",
@@ -3749,7 +3749,18 @@
       ],
       "amenities": [],
       "actions": [],
-      "actionsExtra": [],
+      "actionsExtra": [
+        {
+          "id": "gym",
+          "name": "办健身卡锻炼",
+          "desc": "去健身房办月卡，提升体质和敏捷。",
+          "icon": "🏋️",
+          "apCost": 20,
+          "payEstimate": "体质+1, 敏捷+0.5",
+          "costEstimate": 200,
+          "hint": "去体育馆、公园、商业区或娱乐城"
+        }
+      ],
       "illegal": [],
       "buy": [],
       "sell": [],
@@ -3806,7 +3817,18 @@
       ],
       "amenities": [],
       "actions": [],
-      "actionsExtra": [],
+      "actionsExtra": [
+        {
+          "id": "internet_bar",
+          "name": "网吧上网",
+          "desc": "花 5 块在网吧上 2 小时网，可以查资料、刷视频、玩游戏。",
+          "icon": "💻",
+          "apCost": 20,
+          "payEstimate": "智力+0.3, 随机技能XP",
+          "costEstimate": 5,
+          "hint": "去网吧、城中村、商业区或科技园"
+        }
+      ],
       "illegal": [],
       "buy": [],
       "sell": [],
